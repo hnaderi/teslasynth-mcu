@@ -6,22 +6,21 @@
 #include <cstdint>
 
 struct Config {
-  static constexpr uint32_t ticks_per_sec = 2'000'000;
-  static constexpr uint32_t ticks_per_micro = ticks_per_sec / 1'000'000;
   static constexpr size_t max_notes = 4;
 
-  uint16_t min_on_time = 0, max_on_time = 100, min_deadtime = 100;
-  float a440 = 440.0f;
+  Duration min_on_time = Duration(), max_on_time = 100_us,
+           min_deadtime = 100_us;
+  Hertz a440 = 440_hz;
   size_t notes = max_notes;
 };
 
 struct NotePulse {
-  uint32_t start, off, end;
+  Duration start, off, end;
 };
 
 class Note {
   uint8_t _number = 0, _velocity = 0;
-  uint32_t _on, _release, _now;
+  Duration _on, _release, _now;
   uint8_t instrument;
   bool _started = false;
   bool _active = false;
@@ -29,14 +28,14 @@ class Note {
 
 public:
   Note();
-  Note(uint8_t number, uint8_t velocity, uint8_t instrument, uint32_t time);
-  void release(uint32_t time);
+  Note(uint8_t number, uint8_t velocity, uint8_t instrument, Duration time);
+  void release(Duration time);
   bool tick(const Config &config, NotePulse &out);
 
   bool is_active() const { return _active; }
   bool is_released() const { return _released; }
   bool is_started() const { return _started; }
-  uint32_t time() const { return _now; }
+  Duration time() const { return _now; }
   uint8_t number() const { return _number; }
   uint8_t velocity() const { return _velocity; }
 };
@@ -51,8 +50,8 @@ public:
   Notes(const Config &config);
   Note &next();
   Note &start(uint8_t number, uint8_t velocity, uint8_t instrument,
-              uint32_t time);
-  void release(uint8_t number, uint32_t time);
+              Duration time);
+  void release(uint8_t number, Duration time);
   size_t active() const;
 };
 
@@ -60,13 +59,13 @@ class SynthChannel {
   uint8_t instrument = 0;
   Notes notes;
   uint8_t playing_notes = 0;
-  uint32_t time = 0;
+  Duration time;
   const Config &_config;
 
 public:
   SynthChannel(const Config &config);
-  void on_note_on(uint8_t number, uint8_t velocity, uint32_t time);
-  void on_note_off(uint8_t number, uint8_t velocity, uint32_t time);
+  void on_note_on(uint8_t number, uint8_t velocity, Duration time);
+  void on_note_off(uint8_t number, uint8_t velocity, Duration time);
   void on_program_change(uint8_t value);
   void on_control_change(uint8_t value);
   uint16_t render(Pulse *buffer, uint16_t max_size, uint16_t delta);

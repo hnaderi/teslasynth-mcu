@@ -1,3 +1,4 @@
+#include "core.hpp"
 #include "instruments.hpp"
 #include "synth.hpp"
 #include <algorithm>
@@ -7,24 +8,23 @@
 
 Note::Note() {}
 Note::Note(uint8_t number, uint8_t velocity, uint8_t instrument,
-           uint32_t time) {
+           Duration time) {
   _number = number;
   _velocity = velocity;
   _on = _now = time;
   _active = _started = true;
 }
-void Note::release(uint32_t time) {
+void Note::release(Duration time) {
   _released = true;
   _release = time;
 }
 bool Note::tick(const Config &config, NotePulse &out) {
   bool active = _active;
   if (_active) {
-    float freq = config.a440 * std::expf((_number - 69) / 12.0f);
-    uint32_t period = config.ticks_per_sec / freq;
-    uint32_t max_ticks = config.max_on_time * config.ticks_per_micro;
-    uint32_t level = _velocity / 127.f * max_ticks;
-    uint32_t duty = std::min(max_ticks, level);
+    Hertz freq = config.a440 * std::expf((_number - 69) / 12.0f);
+    Duration period = freq.period();
+    Duration level = config.max_on_time * (_velocity / 127.f);
+    Duration duty = std::min(config.max_on_time, level);
 
     out.start = _now;
     out.off = _now + duty;
@@ -65,7 +65,7 @@ Note &Notes::next() {
 }
 
 Note &Notes::start(uint8_t number, uint8_t velocity, uint8_t instrument,
-                   uint32_t time) {
+                   Duration time) {
   size_t idx = 0;
   for (uint8_t i = 0; i < _size; i++) {
     if (notes[i].is_active() && notes[i].number() != number)
@@ -77,11 +77,11 @@ Note &Notes::start(uint8_t number, uint8_t velocity, uint8_t instrument,
   return notes[idx];
 }
 
-void Notes::release(uint8_t number, uint32_t time) {
+void Notes::release(uint8_t number, Duration time) {
   for (uint8_t i = 0; i < _size; i++) {
-    if (notes[i].is_active() && notes[i].number() == number) {
-      notes[i].release(time);
-      return;
-    }
+    // if (notes[i].is_active() && notes[i].number() == number) {
+    notes[i].release(time);
+    // return;
+    // }
   }
 }

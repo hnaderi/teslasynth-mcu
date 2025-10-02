@@ -1,10 +1,11 @@
 #include "synth.hpp"
+#include "core.hpp"
 #include "instruments.hpp"
 
 SynthChannel::SynthChannel(const Config &config)
     : notes(config), _config(config) {}
 
-void SynthChannel::on_note_on(uint8_t number, uint8_t velocity, uint32_t time) {
+void SynthChannel::on_note_on(uint8_t number, uint8_t velocity, Duration time) {
   if (velocity == 0)
     on_note_off(number, velocity, time);
   else {
@@ -12,7 +13,7 @@ void SynthChannel::on_note_on(uint8_t number, uint8_t velocity, uint32_t time) {
   }
 }
 void SynthChannel::on_note_off(uint8_t number, uint8_t velocity,
-                               uint32_t time) {
+                               Duration time) {
   notes.release(number, time);
 }
 void SynthChannel::on_program_change(uint8_t value) {}

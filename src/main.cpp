@@ -16,7 +16,7 @@ void midi_rx_callback(const uint8_t *data, uint16_t len) {
 
 extern "C" void app_main(void) {
   SynthChannel channel = SynthChannel(Config{});
-  channel.on_note_on(1, 1, 1);
+  channel.on_note_on(1, 1, 1_ms);
   example();
   ble_midi_receiver_init();
   while (1) {

@@ -9,7 +9,10 @@ struct Instrument {
 };
 
 static Instrument instruments[] = {
-    {.envelope = {30, 20, 50, 40, CurveType::Exp}, .vibrato = {}},
-    {.envelope = {30, 20, 50, 40, CurveType::Exp}, .vibrato = {1, 2, true}},
-    {.envelope = {30, 20, 50, 40, CurveType::Exp}, .vibrato = {1, 3, true}},
+    {.envelope = {30_ms, 20_ms, EnvelopeLevel(50), 40_ms, CurveType::Exp},
+     .vibrato = {}},
+    {.envelope = {30_ms, 20_ms, EnvelopeLevel(50), 40_ms, CurveType::Exp},
+     .vibrato = {1, 2, true}},
+    {.envelope = {30_ms, 20_ms, EnvelopeLevel(50), 40_ms, CurveType::Exp},
+     .vibrato = {1, 3, true}},
 };
