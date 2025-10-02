@@ -1,15 +1,18 @@
 #pragma once
 
 #include "core.hpp"
+#include <array>
+#include <cstddef>
 #include <cstdint>
 
 struct Config {
   static constexpr uint32_t ticks_per_sec = 2'000'000;
-  static constexpr auto ticks_per_micro = ticks_per_sec / 1'000'000;
-  static constexpr uint8_t max_notes = 4;
+  static constexpr uint32_t ticks_per_micro = ticks_per_sec / 1'000'000;
+  static constexpr size_t max_notes = 4;
 
   uint16_t min_on_time = 0, max_on_time = 100, min_deadtime = 100;
   float a440 = 440.0f;
+  size_t notes = max_notes;
 };
 
 struct NotePulse {
@@ -17,13 +20,12 @@ struct NotePulse {
 };
 
 class Note {
-  uint8_t _number, _velocity;
+  uint8_t _number = 0, _velocity = 0;
   uint32_t _on, _release, _now;
   uint8_t instrument;
   bool _started = false;
   bool _active = false;
   bool _released = false;
-  bool _high = false;
 
 public:
   Note();
@@ -32,13 +34,31 @@ public:
   bool tick(const Config &config, NotePulse &out);
 
   bool is_active() const { return _active; }
+  bool is_released() const { return _released; }
+  bool is_started() const { return _started; }
   uint32_t time() const { return _now; }
   uint8_t number() const { return _number; }
+  uint8_t velocity() const { return _velocity; }
+};
+
+class Notes {
+  const size_t _size;
+  std::array<Note, Config::max_notes> notes;
+
+public:
+  Notes();
+  Notes(size_t size);
+  Notes(const Config &config);
+  Note &next();
+  Note &start(uint8_t number, uint8_t velocity, uint8_t instrument,
+              uint32_t time);
+  void release(uint8_t number, uint32_t time);
+  size_t active() const;
 };
 
 class SynthChannel {
   uint8_t instrument = 0;
-  Note notes[Config::max_notes];
+  Notes notes;
   uint8_t playing_notes = 0;
   uint32_t time = 0;
   const Config &_config;
