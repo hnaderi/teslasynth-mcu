@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <optional>
 #include <stdint.h>
 #include <string>
 
@@ -14,16 +15,26 @@ class Duration {
 
   explicit Duration(uint32_t v) : _value(v) {}
   explicit Duration(int v) = delete;
+  static constexpr uint32_t _coef_micro = 10;
+  static constexpr uint32_t _coef_milli = 1000 * _coef_micro;
+  static constexpr uint32_t _coef_sec = 1000 * _coef_milli;
 
 public:
   Duration() : _value(0) {}
-  static Duration nanos(uint32_t v) { return Duration(v); }
-  static Duration micros(uint32_t v) { return Duration(v * 1000); }
-  static Duration millis(uint32_t v) { return Duration(v * 1'000'000); }
-  constexpr uint32_t value() const { return _value/1000; }
+  static Duration nanos(uint32_t v) { return Duration(v / 100); }
+  static Duration micros(uint32_t v) { return Duration(v * _coef_micro); }
+  static Duration millis(uint32_t v) { return Duration(v * _coef_milli); }
+  static Duration seconds(uint32_t v) { return Duration(v * _coef_sec); }
+  constexpr uint32_t value() const { return _value; }
 
   Duration operator+(const Duration &b) const {
     return Duration(_value + b._value);
+  }
+  std::optional<Duration> operator-(const Duration &b) const {
+    if (_value >= b._value)
+      return Duration(_value - b._value);
+    else
+      return {};
   }
   Duration operator*(const int b) const { return Duration(_value * b); }
   Duration operator*(const float b) const {
@@ -59,14 +70,14 @@ public:
   constexpr bool is_zero() const { return _value == 0; }
 
   inline std::string print() const {
-    if (_value > 1'000'000'000) {
-      return std::to_string(_value / 1e9) + "S";
-    } else if (_value > 1'000'000) {
-      return std::to_string(_value / 1e6) + "ms";
-    } else if (_value > 1'000) {
-      return std::to_string(_value / 1e3) + "us";
+    if (_value > _coef_sec) {
+      return std::to_string(_value / _coef_sec) + "S";
+    } else if (_value > _coef_milli) {
+      return std::to_string(_value / _coef_milli) + "ms";
+    } else if (_value > _coef_micro) {
+      return std::to_string(_value / _coef_micro) + "us";
     } else {
-      return std::to_string(_value) + "ns";
+      return std::to_string(_value) + "00ns";
     }
   }
 };
@@ -79,6 +90,9 @@ inline Duration operator""_us(unsigned long long l) {
 }
 inline Duration operator""_ms(unsigned long long l) {
   return Duration::millis(static_cast<uint32_t>(l));
+}
+inline Duration operator""_s(unsigned long long l) {
+  return Duration::seconds(static_cast<uint32_t>(l));
 }
 
 class Hertz {
