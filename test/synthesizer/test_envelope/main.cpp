@@ -52,9 +52,11 @@ void test_curve_lin_positive(void) {
   assert_level_equal(curve.update(1_ms), EnvelopeLevel(0.2));
   TEST_ASSERT_FALSE(curve.is_target_reached());
 
+  assert_duration_equal(curve.will_reach_target(8_ms), 0_ms);
   assert_level_equal(curve.update(8_ms), EnvelopeLevel(1));
   TEST_ASSERT_TRUE(curve.is_target_reached());
 
+  assert_duration_equal(curve.will_reach_target(10_ms), 10_ms);
   assert_level_equal(curve.update(10_ms), EnvelopeLevel(1));
   TEST_ASSERT_TRUE(curve.is_target_reached());
 }
@@ -85,9 +87,11 @@ void test_curve_lin_negative(void) {
   assert_level_equal(curve.update(5_ms), EnvelopeLevel(0.6));
   TEST_ASSERT_FALSE(curve.is_target_reached());
 
+  assert_duration_equal(curve.will_reach_target(10_ms), 5_ms);
   assert_level_equal(curve.update(5_ms), EnvelopeLevel(0.2));
   TEST_ASSERT_TRUE(curve.is_target_reached());
 
+  assert_duration_equal(curve.will_reach_target(10_ms), 10_ms);
   assert_level_equal(curve.update(10_ms), EnvelopeLevel(0.2));
   TEST_ASSERT_TRUE(curve.is_target_reached());
 }
@@ -118,10 +122,18 @@ void test_curve_exp_positive(void) {
   assert_level_equal(curve.update(369_us), EnvelopeLevel(0.4));
   TEST_ASSERT_FALSE(curve.is_target_reached());
 
+  assert_duration_equal(curve.will_reach_target(5_ms), 369_us);
+  TEST_ASSERT_FALSE(curve.will_reach_target(1660_us));
   assert_level_equal(curve.update(1660_us), EnvelopeLevel(0.94));
   TEST_ASSERT_FALSE(curve.is_target_reached());
+  TEST_ASSERT_FALSE(curve.will_reach_target(2_ms));
+
+  assert_duration_equal(curve.will_reach_target(2971_us), 0_us);
+  assert_duration_equal(curve.will_reach_target(12971_us), 10_ms);
+  assert_duration_equal(curve.will_reach_target(10_ms), 7029_us);
 
   assert_level_equal(curve.update(10_ms), EnvelopeLevel(1));
+  assert_duration_equal(curve.will_reach_target(10_ms), 10_ms);
   TEST_ASSERT_TRUE(curve.is_target_reached());
 }
 void test_curve_exp_negative(void) {
@@ -137,23 +149,35 @@ void test_curve_exp_negative(void) {
   TEST_ASSERT_TRUE(curve.is_target_reached());
 }
 
+void test_curve_constant(void) {
+  Curve curve = Curve(EnvelopeLevel(0.6));
+  TEST_ASSERT_TRUE_MESSAGE(curve.is_target_reached(),
+                           "Constant curve reaches target immediately!");
+  assert_duration_equal(curve.will_reach_target(10_s), 10_s);
+}
+
+void test_curve_lin_remained(void) {
+  Curve curve =
+      Curve(EnvelopeLevel(0), EnvelopeLevel(1), 10_ms, CurveType::Lin);
+}
+
 const ADSR lin_adsr{10_ms, 20_ms, EnvelopeLevel(0.5), 30_ms, CurveType::Lin};
 const ADSR exp_adsr{10_ms, 20_ms, EnvelopeLevel(0.5), 30_ms, CurveType::Exp};
 
 void test_envelope_full(void) {
-  // Envelope env(lin_adsr);
-  // TEST_ASSERT_EQUAL(Envelope::Stage::Attack, env.stage());
-  // assert_level_equal(env.update(5_ms, true), EnvelopeLevel(0.5));
-  // assert_level_equal(env.update(1_ms, true), EnvelopeLevel(0.6));
-  // TEST_ASSERT_EQUAL(Envelope::Stage::Attack, env.stage());
-  // assert_level_equal(env.update(4_ms, true), EnvelopeLevel(1));
-  // TEST_ASSERT_EQUAL(Envelope::Stage::Decay, env.stage());
-  // assert_level_equal(env.update(20_ms, true), EnvelopeLevel(0.5));
-  // TEST_ASSERT_EQUAL(Envelope::Stage::Sustain, env.stage());
-  // assert_level_equal(env.update(2000_ms, true), EnvelopeLevel(0.5));
-  // TEST_ASSERT_EQUAL(Envelope::Stage::Sustain, env.stage());
-  // assert_level_equal(env.update(3_us, false), EnvelopeLevel(0.45));
-  // TEST_ASSERT_EQUAL(Envelope::Stage::Release, env.stage());
+  Envelope env(lin_adsr);
+  TEST_ASSERT_EQUAL(Envelope::Stage::Attack, env.stage());
+  assert_level_equal(env.update(5_ms, true), EnvelopeLevel(0.5));
+  assert_level_equal(env.update(1_ms, true), EnvelopeLevel(0.6));
+  TEST_ASSERT_EQUAL(Envelope::Stage::Attack, env.stage());
+  assert_level_equal(env.update(4_ms, true), EnvelopeLevel(1));
+  TEST_ASSERT_EQUAL(Envelope::Stage::Decay, env.stage());
+  assert_level_equal(env.update(20_ms, true), EnvelopeLevel(0.5));
+  TEST_ASSERT_EQUAL(Envelope::Stage::Sustain, env.stage());
+  assert_level_equal(env.update(2000_ms, true), EnvelopeLevel(0.5));
+  TEST_ASSERT_EQUAL(Envelope::Stage::Sustain, env.stage());
+  assert_level_equal(env.update(3_ms, false), EnvelopeLevel(0.45));
+  TEST_ASSERT_EQUAL(Envelope::Stage::Release, env.stage());
 }
 
 extern "C" void app_main(void) {
@@ -169,6 +193,7 @@ extern "C" void app_main(void) {
   RUN_TEST(test_curve_lin_negative_small);
   RUN_TEST(test_curve_exp_positive);
   RUN_TEST(test_curve_exp_negative);
+  RUN_TEST(test_curve_constant);
 
   RUN_TEST(test_envelope_full);
   UNITY_END();

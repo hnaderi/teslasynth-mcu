@@ -2,10 +2,11 @@
 
 #include "core.hpp"
 #include <cmath>
+#include <optional>
 #include <string>
 
 constexpr float epsilon = 0.001;
-enum CurveType { Lin, Exp };
+enum CurveType { Lin, Exp, Const };
 
 class EnvelopeLevel {
   float _value;
@@ -90,17 +91,17 @@ class Curve {
 public:
   Curve(EnvelopeLevel start, EnvelopeLevel target, Duration total,
         CurveType type);
+  Curve(EnvelopeLevel constant);
   EnvelopeLevel update(Duration delta);
   bool is_target_reached() const { return _target_reached; }
-  bool will_reach_target(const Duration &dt) const {
-    return dt + _elapsed >= _total;
-  }
+  std::optional<Duration> will_reach_target(const Duration &dt) const;
 };
 
 class Envelope {
   const ADSR &_configs;
   Curve _current;
 
+  Duration progress(Duration delta, bool on);
 public:
   enum Stage { Attack, Decay, Sustain, Release, Off };
 

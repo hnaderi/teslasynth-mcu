@@ -71,11 +71,11 @@ public:
 
   inline operator std::string() const {
     if (_value > _coef_sec) {
-      return std::to_string(_value / _coef_sec) + "S";
+      return std::to_string(_value / static_cast<float>(_coef_sec)) + "S";
     } else if (_value > _coef_milli) {
-      return std::to_string(_value / _coef_milli) + "ms";
+      return std::to_string(_value / static_cast<float>(_coef_milli)) + "ms";
     } else if (_value > _coef_micro) {
-      return std::to_string(_value / _coef_micro) + "us";
+      return std::to_string(_value / static_cast<float>(_coef_micro)) + "us";
     } else {
       return std::to_string(_value) + "00ns";
     }
