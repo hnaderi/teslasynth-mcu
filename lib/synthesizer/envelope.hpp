@@ -72,6 +72,18 @@ struct ADSR {
   EnvelopeLevel sustain;
   Duration release;
   enum CurveType type;
+
+  static ADSR constant(EnvelopeLevel level) {
+    return {0_ns, 0_ns, level, 0_ns, Const};
+  }
+  static ADSR linear(Duration attack, Duration decay, EnvelopeLevel sustain,
+                     Duration release) {
+    return {attack, decay, sustain, release, Lin};
+  }
+  static ADSR exponential(Duration attack, Duration decay,
+                          EnvelopeLevel sustain, Duration release) {
+    return {attack, decay, sustain, release, Exp};
+  }
 };
 
 union CurveState {
@@ -108,6 +120,7 @@ public:
   enum Stage { Attack, Decay, Sustain, Release, Off };
 
   Envelope(ADSR configs);
+  Envelope(EnvelopeLevel level);
   EnvelopeLevel update(Duration delta, bool on);
   Stage stage() const { return _stage; }
   bool is_off() const { return _stage == Off; }

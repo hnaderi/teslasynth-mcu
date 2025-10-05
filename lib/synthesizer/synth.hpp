@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core.hpp"
+#include "envelope.hpp"
 #include <array>
 #include <cstddef>
 #include <cstdint>
@@ -21,14 +22,15 @@ struct NotePulse {
 class Note {
   uint8_t _number = 0, _velocity = 0;
   Duration _on, _release, _now;
-  uint8_t instrument;
+  Envelope _envelope;
   bool _started = false;
   bool _active = false;
   bool _released = false;
 
 public:
   Note();
-  Note(uint8_t number, uint8_t velocity, uint8_t instrument, Duration time);
+  Note(uint8_t number, uint8_t velocity, Duration time, uint8_t instrument);
+  Note(uint8_t number, uint8_t velocity, Duration time, Envelope env);
   void release(Duration time);
   bool tick(const Config &config, NotePulse &out);
 

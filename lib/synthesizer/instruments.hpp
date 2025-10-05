@@ -8,7 +8,7 @@ struct Instrument {
   Vibrato vibrato;
 };
 
-static Instrument instruments[] = {
+const static Instrument instruments[] = {
     {.envelope = {30_ms, 20_ms, EnvelopeLevel(50), 40_ms, CurveType::Exp},
      .vibrato = {}},
     {.envelope = {30_ms, 20_ms, EnvelopeLevel(50), 40_ms, CurveType::Exp},

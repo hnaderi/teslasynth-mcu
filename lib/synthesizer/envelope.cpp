@@ -65,6 +65,8 @@ Envelope::Envelope(ADSR configs)
                                         configs.attack, configs.type)),
       _stage(Attack) {}
 
+Envelope::Envelope(EnvelopeLevel level) : Envelope(ADSR::constant(level)) {}
+
 Duration Envelope::progress(Duration delta, bool on) {
   Duration remained = delta;
   auto dt = _current.will_reach_target(remained);

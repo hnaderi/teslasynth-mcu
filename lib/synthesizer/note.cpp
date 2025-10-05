@@ -1,4 +1,5 @@
 #include "core.hpp"
+#include "envelope.hpp"
 #include "instruments.hpp"
 #include "synth.hpp"
 #include <algorithm>
@@ -6,14 +7,16 @@
 #include <cstddef>
 #include <cstdint>
 
-Note::Note() {}
-Note::Note(uint8_t number, uint8_t velocity, uint8_t instrument,
-           Duration time) {
-  _number = number;
-  _velocity = velocity;
-  _on = _now = time;
-  _active = _started = true;
-}
+Note::Note()
+    : _envelope(
+          Envelope(ADSR{0_ns, 0_ns, EnvelopeLevel(0), 0_ns, CurveType::Lin})) {}
+Note::Note(uint8_t number, uint8_t velocity, Duration time, Envelope env)
+    : _number(number), _velocity(velocity), _on(time), _now(time),
+      _envelope(env), _started(true), _active(true) {}
+
+Note::Note(uint8_t number, uint8_t velocity, Duration time, uint8_t instrument)
+    : Note(number, velocity, time, instruments[instrument].envelope) {}
+
 void Note::release(Duration time) {
   _released = true;
   _release = time;
@@ -73,7 +76,7 @@ Note &Notes::start(uint8_t number, uint8_t velocity, uint8_t instrument,
     idx = i;
     break;
   }
-  notes[idx] = Note(number, velocity, instrument, time);
+  notes[idx] = Note(number, velocity, time, instrument);
   return notes[idx];
 }
 
