@@ -1,6 +1,5 @@
 #pragma once
 
-#include <algorithm>
 #include <cstdint>
 #include <optional>
 #include <stdint.h>
@@ -108,27 +107,43 @@ inline constexpr Duration operator""_s(unsigned long long l) {
 }
 
 class Hertz {
-  uint32_t value;
+  float _value;
+
+  static constexpr uint32_t _coef_kilo = 1000;
+  static constexpr uint32_t _coef_mega = 1000 * _coef_kilo;
 
 public:
-  explicit Hertz(int v) = delete;
-  explicit constexpr Hertz(uint32_t v) : value(std::max<uint32_t>(1, v)) {}
+  explicit constexpr Hertz(float v) : _value(v) {}
   static constexpr Hertz kilohertz(uint32_t v) { return Hertz(v * 1000); }
   static constexpr Hertz megahertz(uint32_t v) { return Hertz(v * 1'000'000); }
 
-  constexpr Hertz operator*(const int b) const { return Hertz(value * b); }
+  constexpr Hertz operator+(const Hertz b) const {
+    return Hertz(_value + b._value);
+  }
+  constexpr Hertz operator-(const Hertz b) const {
+    return Hertz(_value - b._value);
+  }
+  constexpr Hertz operator*(const int b) const { return Hertz(_value * b); }
   constexpr Hertz operator*(const float b) const {
-    return Hertz(static_cast<uint32_t>(value * b));
+    return Hertz(static_cast<uint32_t>(_value * b));
   }
 
-  constexpr bool operator<(const Hertz &b) const { return value < b.value; }
-  constexpr bool operator>(const Hertz &b) const { return value > b.value; }
-  constexpr bool operator==(const Hertz &b) const { return value == b.value; }
-  constexpr bool operator!=(const Hertz &b) const { return value != b.value; }
-  constexpr bool operator<=(const Hertz &b) const { return value <= b.value; }
-  constexpr bool operator>=(const Hertz &b) const { return value >= b.value; }
-  Duration period() const {
-    return Duration::nanos(1'000'000 / (value / 1000.f));
+  constexpr bool operator<(const Hertz &b) const { return _value < b._value; }
+  constexpr bool operator>(const Hertz &b) const { return _value > b._value; }
+  constexpr bool operator==(const Hertz &b) const { return _value == b._value; }
+  constexpr bool operator!=(const Hertz &b) const { return _value != b._value; }
+  constexpr bool operator<=(const Hertz &b) const { return _value <= b._value; }
+  constexpr bool operator>=(const Hertz &b) const { return _value >= b._value; }
+  constexpr Duration period() const { return Duration::nanos(1e9 / _value); }
+
+  inline operator std::string() const {
+    if (_value > _coef_mega) {
+      return std::to_string(_value / static_cast<float>(_coef_mega)) + "MHz";
+    } else if (_value > _coef_kilo) {
+      return std::to_string(_value / static_cast<float>(_coef_kilo)) + "KHz";
+    } else {
+      return std::to_string(_value) + "Hz";
+    }
   }
 };
 

@@ -1,4 +1,5 @@
 #include "synthesizer/helpers/assertions.hpp"
+#include <cmath>
 #include <core.hpp>
 #include <unity.h>
 
@@ -61,6 +62,18 @@ void test_hertz(void) {
   TEST_ASSERT_TRUE(Hertz::megahertz(2) == Hertz::kilohertz(2000));
 }
 
+void test_hertz_arithmetic(void) {
+  assert_hertz_equal(100_hz + 0_hz, 100_hz);
+  assert_hertz_equal(100_hz - 0_hz, 100_hz);
+  assert_hertz_equal(100_hz - 2_hz, 98_hz);
+
+  assert_hertz_equal(100_hz + 900_hz, 1_khz);
+  assert_hertz_equal(100_mhz + 900_mhz, 1000_mhz);
+
+  assert_hertz_equal(900_mhz - 100_mhz, 800_mhz);
+  assert_hertz_equal(2_khz * 4, 8_khz);
+}
+
 extern "C" void app_main(void) {
   UNITY_BEGIN();
   RUN_TEST(test_seconds);
@@ -69,6 +82,7 @@ extern "C" void app_main(void) {
   RUN_TEST(test_duration_constants);
   RUN_TEST(test_duration_minus);
   RUN_TEST(test_hertz);
+  RUN_TEST(test_hertz_arithmetic);
   UNITY_END();
 }
 int main(int argc, char **argv) { app_main(); }

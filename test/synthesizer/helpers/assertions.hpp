@@ -31,6 +31,12 @@ inline void assert_duration_equal(std::optional<Duration> a, Duration b,
 inline void assert_duration_not_equal(Duration a, Duration b, int line) {
   UNITY_TEST_ASSERT(a != b, line, __msg_for(a, b).c_str());
 }
+inline void assert_hertz_equal(Hertz a, Hertz b, int line) {
+  UNITY_TEST_ASSERT(a == b, line, __msg_for(a, b).c_str());
+}
+inline void assert_hertz_not_equal(Hertz a, Hertz b, int line) {
+  UNITY_TEST_ASSERT(a != b, line, __msg_for(a, b).c_str());
+}
 }; // namespace assertions
 }; // namespace synth
 
@@ -45,3 +51,9 @@ inline void assert_duration_not_equal(Duration a, Duration b, int line) {
 
 #define assert_duration_not_equal(a, b)                                        \
   synth::assertions::assert_duration_not_equal(a, b, __LINE__);
+
+#define assert_hertz_equal(a, b)                                               \
+  synth::assertions::assert_hertz_equal(a, b, __LINE__);
+
+#define assert_hertz_not_equal(a, b)                                           \
+  synth::assertions::assert_hertz_not_equal(a, b, __LINE__);
