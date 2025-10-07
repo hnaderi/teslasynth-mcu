@@ -13,6 +13,7 @@ void Note::start(const MidiNote &mnote, Duration time, Envelope env,
   _max_on_time = mnote.volume() * config.max_on_time;
   _envelope = env;
   _active = true;
+  _duty = _max_on_time * _envelope.update(0_us, true);
   _pulse.end = time;
   next();
 }
@@ -27,19 +28,17 @@ void Note::release(Duration time) {
 }
 
 bool Note::next() {
-  bool active = _active;
+  if (_envelope.is_off())
+    _active = false;
   if (_active) {
     Duration period = _freq.period();
-    Duration duty = _max_on_time;
-
-    Duration now = _pulse.end;
-    if (_released && (now + period) >= _release)
-      _active = false;
-    _pulse.start = now;
-    _pulse.off = now + duty;
-    _pulse.end = now + period;
+    _pulse.start = now();
+    _pulse.off = now() + _duty;
+    _pulse.end = now() + period;
+    _duty = _max_on_time *
+            _envelope.update(period, !_released || now() <= _release);
   }
-  return active;
+  return _active;
 }
 
 Notes::Notes() : _size(Config::max_notes) {}

@@ -61,8 +61,9 @@ void test_note_release(void) {
   TEST_ASSERT_TRUE(note.is_active());
   TEST_ASSERT_TRUE(note.is_released());
   TEST_ASSERT_TRUE(note.next());
+  TEST_ASSERT_TRUE(note.next());
 
-  note.next();
+  TEST_ASSERT_FALSE(note.next());
   TEST_ASSERT_FALSE(note.is_active());
   TEST_ASSERT_TRUE(note.is_released());
   assert_duration_equal(note.current().start, 20100_us);
@@ -94,6 +95,49 @@ void test_note_start_after_release(void) {
   test_note_second_start();
 }
 
+void test_note_envelope(void) {
+  Envelope envelope(
+      ADSR{200_ms, 200_ms, EnvelopeLevel(0.5), 20_ms, CurveType::Lin});
+  note.start(mnote1, 0_us, envelope, config);
+  assert_duration_equal(note.current().start, 0_us);
+  assert_duration_equal(note.current().off, 0_us);
+  assert_duration_equal(note.current().end, 10000_us);
+
+  note.next();
+  assert_duration_equal(note.current().start, 10_ms);
+  assert_duration_equal(note.current().off, 10005_us);
+  assert_duration_equal(note.current().end, 20_ms);
+
+  note.release(500_ms);
+  // Let's fast forward to 400ms (sustain)
+  for (int i = 0; i < 38; i++)
+    TEST_ASSERT_TRUE(note.next());
+
+  // Now we're at 400ms and on sustain
+  assert_duration_equal(note.now(), 400_ms);
+  for (int i = 0; i < 10; i++) {
+    note.next();
+    auto start = 400_ms + 10_ms * i;
+    assert_duration_equal(note.current().start, start);
+    assert_duration_equal(note.current().off, start + 50_us);
+    assert_duration_equal(note.current().end, start + 10_ms);
+  }
+
+  // Now the release cycle has begun
+  assert_duration_equal(note.now(), 500_ms);
+  TEST_ASSERT_TRUE(note.next());
+  assert_duration_equal(note.current().start, 500_ms);
+  assert_duration_equal(note.current().off, 500_ms + 50_us);
+  assert_duration_equal(note.current().end, 510_ms);
+
+  TEST_ASSERT_TRUE(note.next());
+  assert_duration_equal(note.current().start, 510_ms);
+  assert_duration_equal(note.current().off, 510_ms + 25_us);
+  assert_duration_equal(note.current().end, 520_ms);
+
+  TEST_ASSERT_FALSE(note.next());
+}
+
 extern "C" void app_main(void) {
   UNITY_BEGIN();
   RUN_TEST(test_empty);
@@ -103,6 +147,7 @@ extern "C" void app_main(void) {
   RUN_TEST(test_note_release);
   RUN_TEST(test_note_second_start);
   RUN_TEST(test_note_start_after_release);
+  RUN_TEST(test_note_envelope);
   UNITY_END();
 }
 

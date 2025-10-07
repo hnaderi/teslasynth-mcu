@@ -38,7 +38,7 @@ class Note {
   Envelope _envelope =
       Envelope(ADSR{0_ns, 0_ns, EnvelopeLevel(0), 0_ns, CurveType::Lin});
   NotePulse _pulse;
-  Duration _release, _max_on_time;
+  Duration _release, _max_on_time, _duty;
   bool _active = false;
   bool _released = false;
 
@@ -54,6 +54,7 @@ public:
 
   bool is_active() const { return _active; }
   bool is_released() const { return _released; }
+  const Duration &now() const { return _pulse.end; }
 };
 
 class Notes {
