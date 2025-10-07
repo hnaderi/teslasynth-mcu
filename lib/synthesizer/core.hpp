@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cmath>
 #include <cstdint>
 #include <optional>
 #include <stdint.h>
@@ -29,6 +30,16 @@ public:
     return Duration(v * _coef_sec);
   }
   constexpr uint32_t value() const { return _value; }
+
+  template <typename T> constexpr T micros() const {
+    return static_cast<T>(_value) / _coef_micro;
+  }
+  template <typename T> constexpr T millis() const {
+    return static_cast<T>(_value) / _coef_milli;
+  }
+  template <typename T> constexpr T seconds() const {
+    return static_cast<T>(_value) / _coef_sec;
+  }
 
   inline static constexpr Duration zero() {
     return Duration(static_cast<uint32_t>(0));
@@ -123,17 +134,22 @@ public:
   constexpr Hertz operator-(const Hertz b) const {
     return Hertz(_value - b._value);
   }
+  constexpr Hertz operator-() const { return Hertz(-_value); }
   constexpr Hertz operator*(const int b) const { return Hertz(_value * b); }
-  constexpr Hertz operator*(const float b) const {
-    return Hertz(static_cast<uint32_t>(_value * b));
-  }
+  constexpr Hertz operator*(const float b) const { return Hertz(_value * b); }
+  constexpr operator float() const { return _value; }
 
   constexpr bool operator<(const Hertz &b) const { return _value < b._value; }
   constexpr bool operator>(const Hertz &b) const { return _value > b._value; }
-  constexpr bool operator==(const Hertz &b) const { return _value == b._value; }
-  constexpr bool operator!=(const Hertz &b) const { return _value != b._value; }
+  constexpr bool operator==(const Hertz &b) const {
+    return std::fabsf(_value - b._value) < 0.001;
+  }
+  constexpr bool operator!=(const Hertz &b) const {
+    return std::fabsf(_value - b._value) > 0.001;
+  }
   constexpr bool operator<=(const Hertz &b) const { return _value <= b._value; }
   constexpr bool operator>=(const Hertz &b) const { return _value >= b._value; }
+  constexpr bool is_zero() const { return _value == 0; }
   constexpr Duration period() const { return Duration::nanos(1e9 / _value); }
 
   inline operator std::string() const {

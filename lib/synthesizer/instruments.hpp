@@ -12,7 +12,7 @@ const static Instrument instruments[] = {
     {.envelope = {30_ms, 20_ms, EnvelopeLevel(50), 40_ms, CurveType::Exp},
      .vibrato = {}},
     {.envelope = {30_ms, 20_ms, EnvelopeLevel(50), 40_ms, CurveType::Exp},
-     .vibrato = {1, 2, true}},
+     .vibrato = {1_hz, 2_hz}},
     {.envelope = {30_ms, 20_ms, EnvelopeLevel(50), 40_ms, CurveType::Exp},
-     .vibrato = {1, 3, true}},
+     .vibrato = {1_hz, 3_hz}},
 };

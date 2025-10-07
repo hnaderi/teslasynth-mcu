@@ -1,10 +1,10 @@
 #pragma once
 
-#include <stdint.h>
+#include "core.hpp"
 
 struct Vibrato {
-  uint8_t freq, depth;
-  bool enabled = false;
-};
+  Hertz freq = 0_hz;
+  Hertz depth = 0_hz;
 
-class LFO {};
+  Hertz offset(const Duration &now);
+};

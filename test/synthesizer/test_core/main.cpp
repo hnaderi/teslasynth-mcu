@@ -58,8 +58,12 @@ void test_hertz(void) {
   assert_duration_equal((2_mhz).period(), 500_ns);
   assert_duration_equal((100_khz).period(), 10_us);
   assert_duration_equal((100_hz).period(), 10_ms);
-
   TEST_ASSERT_TRUE(Hertz::megahertz(2) == Hertz::kilohertz(2000));
+
+  assert_hertz_not_equal(2_hz, -2_hz);
+  assert_hertz_not_equal(-1_hz, -2_hz);
+  assert_hertz_equal(-1_hz, -1_hz);
+  assert_hertz_not_equal(1_hz, 2_hz);
 }
 
 void test_hertz_arithmetic(void) {
