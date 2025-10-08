@@ -59,11 +59,13 @@ public:
   bool is_active() const { return _active; }
   bool is_released() const { return _released; }
   const Duration &now() const { return _pulse.end; }
+  const Hertz &frequency() const { return _freq; }
 };
 
 class Notes {
   const size_t _size;
   std::array<Note, Config::max_notes> notes;
+  std::array<uint8_t, Config::max_notes> numbers;
 
 public:
   Notes();
@@ -71,9 +73,10 @@ public:
   Notes(const Config &config);
   Note &next();
   Note &start(const MidiNote &mnote, Duration time,
-              const Instrument &instrument);
+              const Instrument &instrument, const Config &config);
   void release(uint8_t number, Duration time);
   size_t active() const;
+  size_t size() const { return _size; }
 };
 
 class SynthChannel {

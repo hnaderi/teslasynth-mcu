@@ -9,7 +9,7 @@ void SynthChannel::on_note_on(uint8_t number, uint8_t velocity, Duration time) {
   if (velocity == 0)
     on_note_off(number, velocity, time);
   else {
-    notes.start({number, velocity}, time, instruments[instrument]);
+    notes.start({number, velocity}, time, instruments[instrument], _config);
   }
 }
 void SynthChannel::on_note_off(uint8_t number, uint8_t velocity,

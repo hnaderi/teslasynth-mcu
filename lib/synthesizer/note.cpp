@@ -78,23 +78,24 @@ Note &Notes::next() {
 }
 
 Note &Notes::start(const MidiNote &mnote, Duration time,
-                   const Instrument &instrument) {
+                   const Instrument &instrument, const Config &config) {
   size_t idx = 0;
-  // for (uint8_t i = 0; i < _size; i++) {
-  //   if (notes[i].is_active() && notes[i].number() != number)
-  //     continue;
-  //   idx = i;
-  //   break;
-  // }
-  // notes[idx].start(number, velocity, time, instrument);
+  for (uint8_t i = 0; i < _size; i++) {
+    if (notes[i].is_active() && numbers[i] != mnote.number)
+      continue;
+    idx = i;
+    break;
+  }
+  notes[idx].start(mnote, time, instrument, config);
+  numbers[idx] = mnote.number;
   return notes[idx];
 }
 
 void Notes::release(uint8_t number, Duration time) {
   for (uint8_t i = 0; i < _size; i++) {
-    // if (notes[i].is_active() && notes[i].number() == number) {
-    notes[i].release(time);
-    // return;
-    // }
+    if (notes[i].is_active() && numbers[i] == number) {
+      notes[i].release(time);
+      return;
+    }
   }
 }

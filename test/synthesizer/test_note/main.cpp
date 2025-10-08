@@ -19,6 +19,7 @@ void test_empty(void) {
   Note note;
   TEST_ASSERT_FALSE(note.is_active());
   TEST_ASSERT_FALSE(note.is_released());
+  TEST_ASSERT_TRUE(note.frequency().is_zero());
 
   TEST_ASSERT_TRUE(note.current().start.is_zero());
   TEST_ASSERT_TRUE(note.current().off.is_zero());
@@ -47,6 +48,11 @@ void test_started_note_initial_state(void) {
   assert_duration_equal(note.current().start, 100_us);
   assert_duration_equal(note.current().off, 200_us);
   assert_duration_equal(note.current().end, 10100_us);
+}
+
+void test_started_note_initial_time(void) {
+  note.start(mnote1, 100_s, envelope, config);
+  assert_duration_equal(note.now(), 100_s + 10_ms);
 }
 
 void test_note_next(void) {
@@ -158,6 +164,7 @@ extern "C" void app_main(void) {
   RUN_TEST(test_empty);
   RUN_TEST(test_midi_note_frequency);
   RUN_TEST(test_started_note_initial_state);
+  RUN_TEST(test_started_note_initial_time);
   RUN_TEST(test_note_next);
   RUN_TEST(test_note_release);
   RUN_TEST(test_note_second_start);

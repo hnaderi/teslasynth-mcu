@@ -9,6 +9,7 @@ struct Instrument {
 };
 
 const static Instrument instruments[] = {
+    {.envelope = ADSR::constant(EnvelopeLevel(1)), .vibrato = Vibrato::none()},
     {.envelope = {30_ms, 20_ms, EnvelopeLevel(50), 40_ms, CurveType::Exp},
      .vibrato = {}},
     {.envelope = {30_ms, 20_ms, EnvelopeLevel(50), 40_ms, CurveType::Exp},
