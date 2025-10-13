@@ -56,7 +56,7 @@ Notes::Notes(const Config &config)
 size_t Notes::active() const {
   size_t active = 0;
   for (size_t i = 0; i < _size; i++) {
-    if (notes[i].is_active())
+    if (_notes[i].is_active())
       active++;
   }
   return active;
@@ -64,38 +64,59 @@ size_t Notes::active() const {
 
 Note &Notes::next() {
   auto out = 0;
-  auto min = notes[0].current().start;
+  auto min = _notes[0].current().start;
   for (size_t i = 1; i < _size; i++) {
-    if (!notes[i].is_active())
+    if (!_notes[i].is_active())
       continue;
-    auto time = notes[i].current().start;
+    auto time = _notes[i].current().start;
     if (time < min) {
       out = i;
       min = time;
     }
   }
-  return notes[out];
+  return _notes[out];
 }
 
 Note &Notes::start(const MidiNote &mnote, Duration time,
                    const Instrument &instrument, const Config &config) {
   size_t idx = 0;
   for (uint8_t i = 0; i < _size; i++) {
-    if (notes[i].is_active() && numbers[i] != mnote.number)
+    if (_notes[i].is_active() && _numbers[i] != mnote.number)
       continue;
     idx = i;
     break;
   }
-  notes[idx].start(mnote, time, instrument, config);
-  numbers[idx] = mnote.number;
-  return notes[idx];
+  _notes[idx].start(mnote, time, instrument, config);
+  _numbers[idx] = mnote.number;
+  return _notes[idx];
 }
 
 void Notes::release(uint8_t number, Duration time) {
   for (uint8_t i = 0; i < _size; i++) {
-    if (notes[i].is_active() && numbers[i] == number) {
-      notes[i].release(time);
+    if (_notes[i].is_active() && _numbers[i] == number) {
+      _notes[i].release(time);
       return;
     }
   }
+}
+
+NotePulse Notes::tick() {
+  Note *note = &next();
+  if (!note->is_active())
+    return note->current();
+  while (note->current().end <= _time)
+    note->next();
+
+  NotePulse current = note->current();
+  note->next();
+
+  note = &next();
+  while (note->current().start < current.off) {
+    current = note->current();
+    note->next();
+    note = &next();
+  }
+
+  _time = current.off;
+  return current;
 }

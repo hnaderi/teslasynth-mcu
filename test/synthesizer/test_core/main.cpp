@@ -43,6 +43,15 @@ void test_duration_constants() {
   TEST_ASSERT_TRUE(max - 429_s < 1_s);
 }
 
+void test_duration_arithmetics() {
+  constexpr Duration zero = Duration::zero();
+  constexpr Duration max = Duration::max();
+
+  assert_duration_equal(zero * 1, zero);
+  assert_duration_equal(zero + zero, zero);
+  assert_duration_equal(max * 0, zero);
+}
+
 void test_duration_minus(void) {
   auto a = 1_s - 900_ms;
   TEST_ASSERT_TRUE(a);
@@ -84,6 +93,7 @@ extern "C" void app_main(void) {
   RUN_TEST(test_microseconds);
   RUN_TEST(test_nanoseconds);
   RUN_TEST(test_duration_constants);
+  RUN_TEST(test_duration_arithmetics);
   RUN_TEST(test_duration_minus);
   RUN_TEST(test_hertz);
   RUN_TEST(test_hertz_arithmetic);

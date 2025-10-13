@@ -2,27 +2,22 @@
 #include "core.hpp"
 #include "instruments.hpp"
 
-SynthChannel::SynthChannel(const Config &config)
-    : notes(config), _config(config) {}
+SynthChannel::SynthChannel(const Config &config, Notes &notes)
+    : _notes(notes), _config(config) {}
 
 void SynthChannel::on_note_on(uint8_t number, uint8_t velocity, Duration time) {
   if (velocity == 0)
     on_note_off(number, velocity, time);
   else {
-    notes.start({number, velocity}, time, instruments[instrument], _config);
+    _notes.start({number, velocity}, time, instruments[_instrument], _config);
   }
 }
+
 void SynthChannel::on_note_off(uint8_t number, uint8_t velocity,
                                Duration time) {
-  notes.release(number, time);
+  _notes.release(number, time);
 }
-void SynthChannel::on_program_change(uint8_t value) {}
-void SynthChannel::on_control_change(uint8_t value) {}
 
-// uint16_t SynthChannel::render(Pulse *buffer, uint16_t max_size,
-//                               uint16_t delta) {
-//   NotePulse pulse;
-//   auto next = notes.next();
-//   next.tick(_config, pulse);
-//   return 0;
-// }
+void SynthChannel::on_program_change(uint8_t value) {}
+
+void SynthChannel::on_control_change(uint8_t value) {}

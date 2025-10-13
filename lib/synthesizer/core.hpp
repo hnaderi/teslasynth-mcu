@@ -19,7 +19,9 @@ class Duration {
 public:
   constexpr Duration() : _value(0) {}
 
-  static constexpr Duration nanos(uint32_t v) { return Duration(v / 100); }
+  static constexpr Duration nanos(uint32_t v) {
+    return Duration(v / (1000 / _coef_micro));
+  }
   static constexpr Duration micros(uint32_t v) {
     return Duration(v * _coef_micro);
   }

@@ -63,34 +63,38 @@ public:
 };
 
 class Notes {
-  const size_t _size;
-  std::array<Note, Config::max_notes> notes;
-  std::array<uint8_t, Config::max_notes> numbers;
+  size_t _size;
+  std::array<Note, Config::max_notes> _notes;
+  std::array<uint8_t, Config::max_notes> _numbers;
+  Duration _time = Duration::zero();
 
 public:
   Notes();
   Notes(size_t size);
   Notes(const Config &config);
-  Note &next();
   Note &start(const MidiNote &mnote, Duration time,
               const Instrument &instrument, const Config &config);
   void release(uint8_t number, Duration time);
+
+  Note &next();
+  Duration clock() const { return _time; }
+  NotePulse tick();
+
   size_t active() const;
   size_t size() const { return _size; }
 };
 
 class SynthChannel {
-  uint8_t instrument = 0;
-  Notes notes;
-  uint8_t playing_notes = 0;
-  Duration time;
+  uint8_t _instrument = 0;
+  Notes &_notes;
   const Config &_config;
 
 public:
-  SynthChannel(const Config &config);
+  SynthChannel(const Config &config, Notes &notes);
   void on_note_on(uint8_t number, uint8_t velocity, Duration time);
   void on_note_off(uint8_t number, uint8_t velocity, Duration time);
   void on_program_change(uint8_t value);
   void on_control_change(uint8_t value);
-  // uint16_t render(Pulse *buffer, uint16_t max_size, uint16_t delta);
+
+  uint8_t instrument() const { return _instrument; }
 };
