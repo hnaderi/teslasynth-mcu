@@ -40,6 +40,7 @@ espidf_defines = [
     "-D__XTENSA_SOFT_FLOAT__=1",
     "-DCORE_DEBUG_LEVEL=0",  # Common ESP32 define
     "-DESP_PLATFORM",  # Enables ESP-IDF checks
+    "-DCONFIG_NIMBLE_CPP_IDF=1",
 ]
 
 xtensa_includes = [
