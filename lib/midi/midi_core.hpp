@@ -88,8 +88,8 @@ struct MidiChannelMessage {
   MidiChannelNumber channel;
   MidiData data0, data1;
 
-  static constexpr MidiChannelMessage noteOn(uint8_t ch, uint8_t note,
-                                             uint8_t vel) {
+  static constexpr MidiChannelMessage note_on(uint8_t ch, uint8_t note,
+                                              uint8_t vel) {
     return {
         .type = MidiMessageType::NoteOn,
         .channel = ch,
@@ -98,13 +98,43 @@ struct MidiChannelMessage {
     };
   }
 
-  static constexpr MidiChannelMessage noteOff(uint8_t ch, uint8_t note,
-                                              uint8_t vel) {
+  static constexpr MidiChannelMessage note_off(uint8_t ch, uint8_t note,
+                                               uint8_t vel) {
     return {
         .type = MidiMessageType::NoteOff,
         .channel = ch,
         .data0 = note,
         .data1 = vel,
+    };
+  }
+
+  static constexpr MidiChannelMessage after_touch(uint8_t ch, uint8_t note,
+                                                  uint8_t value) {
+    return {
+        .type = MidiMessageType::AfterTouchPoly,
+        .channel = ch,
+        .data0 = note,
+        .data1 = value,
+    };
+  }
+
+  static constexpr MidiChannelMessage after_touch_channel(uint8_t ch,
+                                                          uint8_t value) {
+    return {
+        .type = MidiMessageType::AfterTouchChannel,
+        .channel = ch,
+        .data0 = value,
+        .data1 = 0,
+    };
+  }
+
+  static constexpr MidiChannelMessage program_change(uint8_t ch,
+                                                     uint8_t value) {
+    return {
+        .type = MidiMessageType::ProgramChange,
+        .channel = ch,
+        .data0 = value,
+        .data1 = 0,
     };
   }
 

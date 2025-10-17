@@ -10,9 +10,12 @@ void MidiParser::feed(const uint8_t *input, size_t len) {
     if (MidiStatus::is_status(input[i])) {
       auto status = MidiStatus(input[i]);
       if (status.is_channel()) {
-        _current_status = status;
+        _current_status_channel = status.channel();
+        _current_status_type = status.channel_status_type();
         _has_status = true;
-        _waiting_for_data = true;
+        _waiting_for_data =
+            _current_status_type != MidiMessageType::ProgramChange &&
+            _current_status_type != MidiMessageType::AfterTouchChannel;
         _has_data = false;
       }
     } else {
@@ -24,9 +27,13 @@ void MidiParser::feed(const uint8_t *input, size_t len) {
         } else {
           MidiData data0 = _has_data ? _data0 : MidiData(input[i]),
                    data1 = _has_data ? MidiData(input[i]) : MidiData();
+          _waiting_for_data =
+              _current_status_type != MidiMessageType::ProgramChange &&
+              _current_status_type != MidiMessageType::AfterTouchChannel;
+          _has_data = false;
           _on_channel_message({
-              .type = _current_status.channel_status_type(),
-              .channel = _current_status.channel(),
+              .type = _current_status_type,
+              .channel = _current_status_channel,
               .data0 = data0,
               .data1 = data1,
           });
