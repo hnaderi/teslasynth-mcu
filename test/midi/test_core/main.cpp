@@ -49,6 +49,7 @@ void midi_status_channel(void) {
     for (int i = 0; i < 16; i++) {
       auto status = MidiStatus(t << 4 | i);
       TEST_ASSERT_TRUE(status.is_channel());
+      TEST_ASSERT_FALSE(status.is_system());
       TEST_ASSERT_EQUAL(t << 4 | 0x80, status.channel_status_type());
       TEST_ASSERT_EQUAL(i, status.channel());
     }
@@ -59,6 +60,23 @@ void midi_status_channel(void) {
   }
 }
 
+void midi_status_system(void) {
+  for (int i = 0; i < 16; i++) {
+    auto status = MidiStatus(0xF0 | i);
+    TEST_ASSERT_FALSE(status.is_channel());
+    TEST_ASSERT_TRUE(status.is_system());
+  }
+}
+
+void midi_status_system_realtime(void) {
+  for (int i = 0; i < 8; i++) {
+    auto status = MidiStatus(0xF8 | i);
+    TEST_ASSERT_FALSE(status.is_channel());
+    TEST_ASSERT_TRUE(status.is_system());
+    TEST_ASSERT_TRUE(status.is_system_realtime());
+  }
+}
+
 extern "C" void app_main(void) {
   UNITY_BEGIN();
   RUN_TEST(print_sizes_midi);
@@ -66,6 +84,8 @@ extern "C" void app_main(void) {
   RUN_TEST(midi_channel_number);
   RUN_TEST(midi_status);
   RUN_TEST(midi_status_channel);
+  RUN_TEST(midi_status_system);
+  RUN_TEST(midi_status_system_realtime);
   UNITY_END();
 }
 

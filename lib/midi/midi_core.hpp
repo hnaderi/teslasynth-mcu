@@ -13,6 +13,7 @@ enum MidiType : uint8_t {
   AfterTouchChannel =
       0xD0,               ///< Channel Message - Channel (monophonic) AfterTouch
   PitchBend = 0xE0,       ///< Channel Message - Pitch Bend
+
   SystemExclusive = 0xF0, ///< System Exclusive
   SystemExclusiveStart = SystemExclusive, ///< System Exclusive Start
   TimeCodeQuarterFrame = 0xF1, ///< System Common - MIDI Time Code Quarter Frame
@@ -72,6 +73,9 @@ struct MidiStatus {
   constexpr MidiMessageType channel_status_type() const {
     return static_cast<MidiMessageType>(value & 0xF0);
   }
+
+  constexpr bool is_system() const { return (value & 0xF0) == 0xF0; }
+  constexpr bool is_system_realtime() const { return (value & 0xF8) == 0xF8; }
 
   static constexpr bool is_status(uint8_t v) { return v & 0x80; }
   static constexpr MidiStatus min() { return 0; }

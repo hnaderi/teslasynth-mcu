@@ -82,11 +82,9 @@ struct Random {
     }
     return total;
   }
-};
+} rng;
 
-Random rng;
-
-void parser_sanity(void) {
+void parser_empty(void) {
   Messages msgs;
   MidiParser parser([&](const MidiChannelMessage &m) { msgs.push_back(m); });
   TEST_ASSERT_FALSE(parser.has_status());
@@ -308,9 +306,50 @@ void parser_feed_bytes_with_status_many(void) {
   TEST_ASSERT_NOT_EQUAL(0, total);
 }
 
+void parser_clears_status_on_non_realtime_system_messages(void) {
+  Messages msgs;
+  MidiParser parser([&](const MidiChannelMessage &m) { msgs.push_back(m); });
+
+  for (auto type : message_types::channel::all) {
+    MidiStatus status(type, rng.channel());
+    uint8_t input[]{status};
+    parser.feed(input, 1);
+    TEST_ASSERT_TRUE(parser.has_status());
+    TEST_ASSERT_TRUE(status == parser.status());
+    for (size_t i = 0; i < 8; i++) {
+      input[0] = MidiStatus(0xF0 | i);
+      parser.feed(input, 1);
+      TEST_ASSERT_FALSE(parser.has_status());
+    }
+  }
+
+  TEST_ASSERT_EQUAL(0, msgs.size());
+}
+
+void parser_does_not_clear_status_on_realtime_system_messages(void) {
+  Messages msgs;
+  MidiParser parser([&](const MidiChannelMessage &m) { msgs.push_back(m); });
+
+  for (auto type : message_types::channel::all) {
+    MidiStatus status(type, rng.channel());
+    uint8_t input[]{status};
+    parser.feed(input, 1);
+    TEST_ASSERT_TRUE(parser.has_status());
+    TEST_ASSERT_TRUE(status == parser.status());
+    for (size_t i = 8; i < 16; i++) {
+      input[0] = MidiStatus(0xF0 | i);
+      parser.feed(input, 1);
+      TEST_ASSERT_TRUE(parser.has_status());
+      TEST_ASSERT_TRUE(status == parser.status());
+    }
+  }
+
+  TEST_ASSERT_EQUAL(0, msgs.size());
+}
+
 extern "C" void app_main(void) {
   UNITY_BEGIN();
-  RUN_TEST(parser_sanity);
+  RUN_TEST(parser_empty);
   RUN_TEST(parser_feed_note_on);
   RUN_TEST(parser_feed_note_off);
   RUN_TEST(parser_feed_program_change);
@@ -326,6 +365,9 @@ extern "C" void app_main(void) {
   RUN_TEST(parser_ignores_status_with_no_data);
 
   RUN_TEST(parser_feed_bytes_with_status_many);
+
+  RUN_TEST(parser_clears_status_on_non_realtime_system_messages);
+  RUN_TEST(parser_does_not_clear_status_on_realtime_system_messages);
   UNITY_END();
 }
 

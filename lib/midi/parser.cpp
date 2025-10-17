@@ -17,6 +17,10 @@ void MidiParser::feed(const uint8_t *input, size_t len) {
             _current_status_type != MidiMessageType::ProgramChange &&
             _current_status_type != MidiMessageType::AfterTouchChannel;
         _has_data = false;
+      } else if (status.is_system_realtime()) {
+
+      } else if (status.is_system()) {
+        _has_status = false;
       }
     } else {
       if (_has_status) {
