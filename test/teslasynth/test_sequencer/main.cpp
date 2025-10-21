@@ -66,7 +66,7 @@ void test_should_sequence_empty(void) {
     Duration step = Duration::millis(i);
     auto pulse = seq.sample(step);
     assert_duration_equal(seq.clock(), time + step);
-    assert_duration_equal(pulse.start, 0_ms);
+    assert_duration_equal(pulse.start, time);
     assert_duration_equal(pulse.duty, 0_ms);
     assert_duration_equal(pulse.period, step);
     time += step;
@@ -87,10 +87,10 @@ void test_should_sequence_single(void) {
   assert_duration_equal(pulse.period, 10_ms);
 
   NotePulse pulse2 = seq.sample(10_ms);
-  assert_duration_equal(seq.clock(), 20_ms);
   assert_duration_equal(pulse2.start, 10_ms);
-  assert_duration_equal(pulse2.duty, 10_ms + 100_us);
-  assert_duration_equal(pulse2.period, 10_ms + 100_us + config.min_deadtime);
+  assert_duration_equal(pulse2.duty, 100_us);
+  assert_duration_equal(pulse2.period, 100_us + config.min_deadtime);
+  assert_duration_equal(seq.clock(), 10_ms + pulse2.period);
 }
 
 // void test_should_sequence_single(void) {
@@ -127,8 +127,8 @@ extern "C" void app_main(void) {
   UNITY_BEGIN();
 
   RUN_TEST(test_empty);
-  // RUN_TEST(test_should_sequence_empty);
-  // RUN_TEST(test_should_sequence_single);
+  RUN_TEST(test_should_sequence_empty);
+  RUN_TEST(test_should_sequence_single);
   // RUN_TEST(test_should_sequence_polyphonic);
   UNITY_END();
 }

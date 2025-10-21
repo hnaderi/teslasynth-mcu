@@ -62,17 +62,19 @@ public:
 
   NotePulse sample(Duration max) {
     NotePulse res;
+    res.start = clock_;
+
     Note *note = &notes_.next();
     Duration next_edge = note->current().start;
     Duration target = clock_ + max;
     if (!note->is_active() || next_edge > target) {
-      res.period = target;
+      res.period = max;
       clock_ = target;
     } else if (next_edge == clock_) {
       res = note->current();
       note->next();
-      clock_ = res.duty + config_.min_deadtime;
-      res.duty = res.duty + config_.min_deadtime;
+      res.period = res.duty + config_.min_deadtime;
+      clock_ += res.period;
     } else if (next_edge < target) {
       res.period = next_edge;
       clock_ = next_edge;
