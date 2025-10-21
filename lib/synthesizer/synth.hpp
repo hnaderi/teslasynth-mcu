@@ -32,6 +32,12 @@ struct MidiNote {
   constexpr EnvelopeLevel volume() const {
     return EnvelopeLevel(velocity / 127.f);
   }
+  constexpr bool operator==(MidiNote b) const {
+    return number == b.number && velocity == b.velocity;
+  }
+  constexpr bool operator!=(MidiNote b) const {
+    return number != b.number || velocity != b.velocity;
+  }
 };
 
 class Note {
@@ -66,7 +72,6 @@ class Notes {
   size_t _size;
   std::array<Note, Config::max_notes> _notes;
   std::array<uint8_t, Config::max_notes> _numbers;
-  Duration _time = Duration::zero();
 
 public:
   Notes();
@@ -77,24 +82,41 @@ public:
   void release(uint8_t number, Duration time);
 
   Note &next();
-  Duration clock() const { return _time; }
-  NotePulse tick();
 
   size_t active() const;
   size_t size() const { return _size; }
 };
 
-class SynthChannel {
+template <class N = Notes> class SynthChannel {
   uint8_t _instrument = 0;
-  Notes &_notes;
+  N &_notes;
   const Config &_config;
+  const Instrument *_instruments;
+  const size_t _instruments_size;
 
 public:
-  SynthChannel(const Config &config, Notes &notes);
-  void on_note_on(uint8_t number, uint8_t velocity, Duration time);
-  void on_note_off(uint8_t number, uint8_t velocity, Duration time);
-  void on_program_change(uint8_t value);
-  void on_control_change(uint8_t value);
+  SynthChannel(const Config &config, N &notes, const Instrument *instruments,
+               size_t instruments_size)
+      : _notes(notes), _config(config), _instruments(instruments),
+        _instruments_size(instruments_size) {}
+
+  SynthChannel(const Config &config, N &notes)
+      : SynthChannel(config, notes, NULL, 0) {}
+
+  void on_note_on(const MidiNote &mnote, Duration time) {
+    if (mnote.velocity == 0)
+      on_note_off(mnote, time);
+    else {
+      const Instrument &inst = _instrument < _instruments_size
+                                   ? _instruments[_instrument]
+                                   : default_instrument();
+      _notes.start(mnote, time, inst, _config);
+    }
+  }
+  void on_note_off(const MidiNote &mnote, Duration time) {
+    _notes.release(mnote.number, time);
+  }
+  void on_program_change(uint8_t value) { _instrument = value; }
 
   uint8_t instrument() const { return _instrument; }
 };

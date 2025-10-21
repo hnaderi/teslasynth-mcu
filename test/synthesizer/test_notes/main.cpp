@@ -132,45 +132,6 @@ void test_should_allow_the_minimum_size_of_one(void) {
   assert_hertz_equal(note.frequency(), mnotef(1).frequency(config));
 }
 
-void test_should_sequence_empty(void) {
-  Notes notes(1);
-  assert_duration_equal(notes.clock(), 0_ms);
-  auto pulse = notes.tick();
-  assert_duration_equal(notes.clock(), 0_ms);
-  assert_duration_equal(pulse.start, 0_ms);
-  assert_duration_equal(pulse.off, 0_ms);
-  assert_duration_equal(pulse.end, 0_ms);
-}
-
-void test_should_sequence_single(void) {
-  Notes notes(1);
-  assert_note(notes, mnotef(0), 100_ms);
-  assert_duration_equal(notes.clock(), 0_ms);
-  for (uint8_t i = 0; i < 10; i++) {
-    auto pulse = notes.tick();
-    Duration start = 100_ms + (10_ms * i);
-    assert_duration_equal(pulse.start, start);
-    assert_duration_equal(pulse.off, start + 100_us);
-    assert_duration_equal(notes.clock(), start + 100_us);
-    assert_duration_equal(pulse.end, start + 10_ms);
-  }
-}
-
-void test_should_sequence_polyphonic(void) {
-  Notes notes(2);
-  assert_note(notes, mnotef(0), 100_ms);
-  assert_note(notes, mnotef(12), 100_ms);
-  assert_duration_equal(notes.clock(), 0_ms);
-  for (uint8_t i = 0; i < 10; i++) {
-    auto pulse = notes.tick();
-    Duration start = 100_ms + (5_ms * i);
-    assert_duration_equal(pulse.start, start);
-    assert_duration_equal(pulse.off, start + 100_us);
-    assert_duration_equal(notes.clock(), start + 100_us);
-    assert_duration_equal(pulse.end, start + 5_ms);
-  }
-}
-
 extern "C" void app_main(void) {
   UNITY_BEGIN();
   RUN_TEST(test_empty);
@@ -183,9 +144,6 @@ extern "C" void app_main(void) {
   RUN_TEST(test_should_not_release_other_notes);
   RUN_TEST(test_should_allow_the_minimum_size_of_one);
 
-  RUN_TEST(test_should_sequence_empty);
-  RUN_TEST(test_should_sequence_single);
-  RUN_TEST(test_should_sequence_polyphonic);
   UNITY_END();
 }
 int main(int argc, char **argv) { app_main(); }

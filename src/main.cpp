@@ -3,8 +3,8 @@
 
 extern "C" void app_main(void) {
   auto sbuf = ble_begin("Teslasynth");
-  // rmt_driver();
   play(sbuf);
+  // rmt_driver();
   while (1) {
     vTaskDelay(pdMS_TO_TICKS(1000));
   }

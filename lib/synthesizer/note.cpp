@@ -99,24 +99,3 @@ void Notes::release(uint8_t number, Duration time) {
     }
   }
 }
-
-NotePulse Notes::tick() {
-  Note *note = &next();
-  if (!note->is_active())
-    return note->current();
-  while (note->current().end <= _time)
-    note->next();
-
-  NotePulse current = note->current();
-  note->next();
-
-  note = &next();
-  while (note->current().start < current.off) {
-    current = note->current();
-    note->next();
-    note = &next();
-  }
-
-  _time = current.off;
-  return current;
-}

@@ -209,6 +209,20 @@ void test_envelope_const_full(void) {
   TEST_ASSERT_EQUAL(Envelope::Stage::Off, env.stage());
 }
 
+void test_envelope_comparison(void) {
+  TEST_ASSERT_TRUE(lin_adsr == lin_adsr);
+  TEST_ASSERT_FALSE(lin_adsr != lin_adsr);
+  TEST_ASSERT_TRUE(exp_adsr == exp_adsr);
+  TEST_ASSERT_FALSE(exp_adsr != exp_adsr);
+  TEST_ASSERT_TRUE(const_adsr == const_adsr);
+  TEST_ASSERT_FALSE(const_adsr != const_adsr);
+
+  TEST_ASSERT_TRUE(lin_adsr != exp_adsr);
+  TEST_ASSERT_FALSE(lin_adsr == exp_adsr);
+  TEST_ASSERT_TRUE(lin_adsr != const_adsr);
+  TEST_ASSERT_FALSE(lin_adsr == const_adsr);
+}
+
 extern "C" void app_main(void) {
   UNITY_BEGIN();
   RUN_TEST(test_level_comparison);
@@ -227,6 +241,7 @@ extern "C" void app_main(void) {
   RUN_TEST(test_envelope_lin_full);
   RUN_TEST(test_envelope_exp_full);
   RUN_TEST(test_envelope_const_full);
+  RUN_TEST(test_envelope_comparison);
   UNITY_END();
 }
 

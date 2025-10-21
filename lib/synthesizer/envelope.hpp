@@ -3,6 +3,7 @@
 #include "core.hpp"
 #include <cmath>
 #include <optional>
+#include <sstream>
 #include <string>
 
 constexpr float epsilon = 0.001;
@@ -65,22 +66,52 @@ public:
 };
 
 struct ADSR {
-  Duration attack;
-  Duration decay;
-  EnvelopeLevel sustain;
-  Duration release;
-  enum CurveType type;
+  Duration attack = Duration::zero();
+  Duration decay = Duration::zero();
+  EnvelopeLevel sustain = EnvelopeLevel(1);
+  Duration release = Duration::zero();
+  enum CurveType type = CurveType::Const;
 
-  static ADSR constant(EnvelopeLevel level) {
+  constexpr static ADSR constant(EnvelopeLevel level) {
     return {0_ns, 0_ns, level, 0_ns, Const};
   }
-  static ADSR linear(Duration attack, Duration decay, EnvelopeLevel sustain,
-                     Duration release) {
+  constexpr static ADSR linear(Duration attack, Duration decay,
+                               EnvelopeLevel sustain, Duration release) {
     return {attack, decay, sustain, release, Lin};
   }
-  static ADSR exponential(Duration attack, Duration decay,
-                          EnvelopeLevel sustain, Duration release) {
+  constexpr static ADSR exponential(Duration attack, Duration decay,
+                                    EnvelopeLevel sustain, Duration release) {
     return {attack, decay, sustain, release, Exp};
+  }
+
+  constexpr bool operator==(ADSR b) const {
+    return attack == b.attack && decay == b.decay && sustain == b.sustain &&
+           release == b.release && type == b.type;
+  }
+
+  constexpr bool operator!=(ADSR b) const {
+    return attack != b.attack || decay != b.decay || sustain != b.sustain ||
+           release != b.release || type != b.type;
+  }
+
+  inline operator std::string() const {
+    std::stringstream stream;
+    switch (type) {
+    case Lin:
+      stream << "lin";
+      break;
+    case Exp:
+      stream << "exp";
+      break;
+    case Const:
+      stream << "const";
+      break;
+    }
+
+    stream << " A: " << std::string(attack) << " D: " << std::string(decay)
+           << " S: " << std::string(sustain) << " R: " << std::string(release);
+
+    return stream.str();
   }
 };
 

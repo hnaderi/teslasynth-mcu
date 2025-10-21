@@ -36,11 +36,27 @@ void test_oscillation2(void) {
   assert_hertz_equal(lfo.offset(500_ms), 0_hz);
 }
 
+void test_comparision(void) {
+  Vibrato lfo0, lfo1{2_hz, 10_hz}, lfo2{2_hz, 10_hz}, lfo3{5_hz, 20_hz};
+  TEST_ASSERT_TRUE(lfo0 == lfo0);
+  TEST_ASSERT_FALSE(lfo0 != lfo0);
+
+  TEST_ASSERT_TRUE(lfo1 == lfo2);
+  TEST_ASSERT_FALSE(lfo1 != lfo2);
+
+  TEST_ASSERT_TRUE(lfo0 != lfo1);
+  TEST_ASSERT_FALSE(lfo0 == lfo1);
+
+  TEST_ASSERT_FALSE(lfo2 == lfo3);
+  TEST_ASSERT_TRUE(lfo2 != lfo3);
+}
+
 extern "C" void app_main(void) {
   UNITY_BEGIN();
   RUN_TEST(test_flat);
   RUN_TEST(test_oscillation1);
   RUN_TEST(test_oscillation2);
+  RUN_TEST(test_comparision);
   UNITY_END();
 }
 

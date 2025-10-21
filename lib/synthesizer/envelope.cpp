@@ -93,6 +93,7 @@ Duration Envelope::progress(Duration delta, bool on) {
     case Release:
       _current = Curve(EnvelopeLevel(0));
       _stage = Off;
+      break;
     case Off:
       return 0_ns;
     }
