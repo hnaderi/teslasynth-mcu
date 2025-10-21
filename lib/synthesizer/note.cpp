@@ -18,7 +18,7 @@ void Note::start(const MidiNote &mnote, Duration time, Envelope env,
   _vibrato = vibrato;
   _active = true;
   _duty = _max_on_time * _envelope.update(0_us, true);
-  _pulse.end = time;
+  _now = time;
   next();
 }
 
@@ -43,9 +43,10 @@ bool Note::next() {
     _active = false;
   if (_active) {
     Duration period = (_freq + _vibrato.offset(now())).period();
-    _pulse.start = now();
-    _pulse.off = now() + _duty;
-    _pulse.end = now() + period;
+    _pulse.start = _now;
+    _pulse.duty = _duty;
+    _pulse.period = period;
+    _now += period;
     _duty = _max_on_time *
             _envelope.update(period, !_released || now() <= _release);
   }

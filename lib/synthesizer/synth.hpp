@@ -18,7 +18,9 @@ struct Config {
 };
 
 struct NotePulse {
-  Duration start, off, end;
+  Duration start, duty, period;
+
+  constexpr bool is_zero() const { return duty.is_zero(); }
 };
 
 struct MidiNote {
@@ -46,7 +48,7 @@ class Note {
       Envelope(ADSR{0_ns, 0_ns, EnvelopeLevel(0), 0_ns, CurveType::Lin});
   Vibrato _vibrato;
   NotePulse _pulse;
-  Duration _release, _max_on_time, _duty;
+  Duration _release, _max_on_time, _duty, _now;
   bool _active = false;
   bool _released = false;
 
@@ -64,10 +66,9 @@ public:
   bool next();
   const NotePulse &current() const { return _pulse; }
 
-
   bool is_active() const { return _active; }
   bool is_released() const { return _released; }
-  const Duration &now() const { return _pulse.end; }
+  const Duration &now() const { return _now; }
   const Hertz &frequency() const { return _freq; }
 };
 
@@ -83,44 +84,13 @@ public:
   Note &start(const MidiNote &mnote, Duration time,
               const Instrument &instrument, const Config &config);
   void release(uint8_t number, Duration time);
+  inline void release(const MidiNote &mnote, Duration time) {
+    release(mnote.number, time);
+  }
   void off();
 
   Note &next();
 
   size_t active() const;
   size_t size() const { return _size; }
-};
-
-template <class N = Notes> class SynthChannel {
-  uint8_t _instrument = 0;
-  N &_notes;
-  const Config &_config;
-  const Instrument *_instruments;
-  const size_t _instruments_size;
-
-public:
-  SynthChannel(const Config &config, N &notes, const Instrument *instruments,
-               size_t instruments_size)
-      : _notes(notes), _config(config), _instruments(instruments),
-        _instruments_size(instruments_size) {}
-
-  SynthChannel(const Config &config, N &notes)
-      : SynthChannel(config, notes, NULL, 0) {}
-
-  void on_note_on(const MidiNote &mnote, Duration time) {
-    if (mnote.velocity == 0)
-      on_note_off(mnote, time);
-    else {
-      const Instrument &inst = _instrument < _instruments_size
-                                   ? _instruments[_instrument]
-                                   : default_instrument();
-      _notes.start(mnote, time, inst, _config);
-    }
-  }
-  void on_note_off(const MidiNote &mnote, Duration time) {
-    _notes.release(mnote.number, time);
-  }
-  void on_program_change(uint8_t value) { _instrument = value; }
-
-  uint8_t instrument() const { return _instrument; }
 };

@@ -22,14 +22,14 @@ void test_empty(void) {
   TEST_ASSERT_TRUE(note.frequency().is_zero());
 
   TEST_ASSERT_TRUE(note.current().start.is_zero());
-  TEST_ASSERT_TRUE(note.current().off.is_zero());
-  TEST_ASSERT_TRUE(note.current().end.is_zero());
+  TEST_ASSERT_TRUE(note.current().duty.is_zero());
+  TEST_ASSERT_TRUE(note.current().period.is_zero());
 
   TEST_ASSERT_FALSE(note.next());
 
   TEST_ASSERT_TRUE(note.current().start.is_zero());
-  TEST_ASSERT_TRUE(note.current().off.is_zero());
-  TEST_ASSERT_TRUE(note.current().end.is_zero());
+  TEST_ASSERT_TRUE(note.current().duty.is_zero());
+  TEST_ASSERT_TRUE(note.current().period.is_zero());
 }
 
 void test_midi_note_frequency(void) {
@@ -46,8 +46,8 @@ void test_started_note_initial_state(void) {
   TEST_ASSERT_TRUE(note.is_active());
   TEST_ASSERT_FALSE(note.is_released());
   assert_duration_equal(note.current().start, 100_us);
-  assert_duration_equal(note.current().off, 200_us);
-  assert_duration_equal(note.current().end, 10100_us);
+  assert_duration_equal(note.current().duty, 100_us);
+  assert_duration_equal(note.current().period, 10000_us);
 }
 
 void test_started_note_initial_time(void) {
@@ -58,8 +58,8 @@ void test_started_note_initial_time(void) {
 void test_note_next(void) {
   note.next();
   assert_duration_equal(note.current().start, 10100_us);
-  assert_duration_equal(note.current().off, 10200_us);
-  assert_duration_equal(note.current().end, 20100_us);
+  assert_duration_equal(note.current().duty, 100_us);
+  assert_duration_equal(note.current().period, 10_ms);
 }
 
 void test_note_release(void) {
@@ -67,22 +67,25 @@ void test_note_release(void) {
 
   TEST_ASSERT_TRUE(note.is_active());
   TEST_ASSERT_TRUE(note.is_released());
+
   TEST_ASSERT_TRUE(note.next());
   TEST_ASSERT_TRUE(note.next());
+  TEST_ASSERT_FALSE(note.next());
+
+  TEST_ASSERT_FALSE(note.is_active());
+  TEST_ASSERT_TRUE(note.is_released());
+  assert_duration_equal(note.now(), 30100_us);
+  assert_duration_equal(note.current().start, 20100_us);
+  assert_duration_equal(note.current().duty, 100_us);
+  assert_duration_equal(note.current().period, 10_ms);
 
   TEST_ASSERT_FALSE(note.next());
   TEST_ASSERT_FALSE(note.is_active());
   TEST_ASSERT_TRUE(note.is_released());
+  assert_duration_equal(note.now(), 30100_us);
   assert_duration_equal(note.current().start, 20100_us);
-  assert_duration_equal(note.current().off, 20200_us);
-  assert_duration_equal(note.current().end, 30100_us);
-
-  TEST_ASSERT_FALSE(note.next());
-  TEST_ASSERT_FALSE(note.is_active());
-  TEST_ASSERT_TRUE(note.is_released());
-  assert_duration_equal(note.current().start, 20100_us);
-  assert_duration_equal(note.current().off, 20200_us);
-  assert_duration_equal(note.current().end, 30100_us);
+  assert_duration_equal(note.current().duty, 100_us);
+  assert_duration_equal(note.current().period, 10_ms);
 }
 
 void test_note_release_with_zero_velocity(void) {
@@ -90,34 +93,37 @@ void test_note_release_with_zero_velocity(void) {
 
   TEST_ASSERT_TRUE(note.is_active());
   TEST_ASSERT_TRUE(note.is_released());
+
   TEST_ASSERT_TRUE(note.next());
   TEST_ASSERT_TRUE(note.next());
+  TEST_ASSERT_FALSE(note.next());
+
+  TEST_ASSERT_FALSE(note.is_active());
+  TEST_ASSERT_TRUE(note.is_released());
+  assert_duration_equal(note.now(), 30100_us);
+  assert_duration_equal(note.current().start, 20100_us);
+  assert_duration_equal(note.current().duty, 100_us);
+  assert_duration_equal(note.current().period, 10_ms);
 
   TEST_ASSERT_FALSE(note.next());
   TEST_ASSERT_FALSE(note.is_active());
   TEST_ASSERT_TRUE(note.is_released());
+  assert_duration_equal(note.now(), 30100_us);
   assert_duration_equal(note.current().start, 20100_us);
-  assert_duration_equal(note.current().off, 20200_us);
-  assert_duration_equal(note.current().end, 30100_us);
-
-  TEST_ASSERT_FALSE(note.next());
-  TEST_ASSERT_FALSE(note.is_active());
-  TEST_ASSERT_TRUE(note.is_released());
-  assert_duration_equal(note.current().start, 20100_us);
-  assert_duration_equal(note.current().off, 20200_us);
-  assert_duration_equal(note.current().end, 30100_us);
+  assert_duration_equal(note.current().duty, 100_us);
+  assert_duration_equal(note.current().period, 10_ms);
 }
 
 void test_note_second_start(void) {
   note.next();
   assert_duration_equal(note.current().start, 10100_us);
-  assert_duration_equal(note.current().off, 10200_us);
-  assert_duration_equal(note.current().end, 20100_us);
+  assert_duration_equal(note.current().duty, 100_us);
+  assert_duration_equal(note.current().period, 10_ms);
 
   note.start({69 + 12, 127}, 100_ms, envelope, config);
   assert_duration_equal(note.current().start, 100_ms);
-  assert_duration_equal(note.current().off, 100_ms + 100_us);
-  assert_duration_equal(note.current().end, 105_ms);
+  assert_duration_equal(note.current().duty, 100_us);
+  assert_duration_equal(note.current().period, 5_ms);
 }
 
 void test_note_start_after_release(void) {
@@ -129,14 +135,14 @@ void test_note_envelope(void) {
   Envelope envelope(
       ADSR{200_ms, 200_ms, EnvelopeLevel(0.5), 20_ms, CurveType::Lin});
   note.start(mnote1, 0_us, envelope, config);
-  assert_duration_equal(note.current().start, 0_us);
-  assert_duration_equal(note.current().off, 0_us);
-  assert_duration_equal(note.current().end, 10000_us);
+  assert_duration_equal(note.current().start, 0_ms);
+  assert_duration_equal(note.current().duty, 0_us);
+  assert_duration_equal(note.current().period, 10_ms);
 
   note.next();
   assert_duration_equal(note.current().start, 10_ms);
-  assert_duration_equal(note.current().off, 10005_us);
-  assert_duration_equal(note.current().end, 20_ms);
+  assert_duration_equal(note.current().duty, 5_us);
+  assert_duration_equal(note.current().period, 10_ms);
 
   note.release(500_ms);
   // Let's fast forward to 400ms (sustain)
@@ -149,21 +155,21 @@ void test_note_envelope(void) {
     note.next();
     auto start = 400_ms + 10_ms * i;
     assert_duration_equal(note.current().start, start);
-    assert_duration_equal(note.current().off, start + 50_us);
-    assert_duration_equal(note.current().end, start + 10_ms);
+    assert_duration_equal(note.current().duty, 50_us);
+    assert_duration_equal(note.current().period, 10_ms);
   }
 
   // Now the release cycle has begun
   assert_duration_equal(note.now(), 500_ms);
   TEST_ASSERT_TRUE(note.next());
   assert_duration_equal(note.current().start, 500_ms);
-  assert_duration_equal(note.current().off, 500_ms + 50_us);
-  assert_duration_equal(note.current().end, 510_ms);
+  assert_duration_equal(note.current().duty, 50_us);
+  assert_duration_equal(note.current().period, 10_ms);
 
   TEST_ASSERT_TRUE(note.next());
   assert_duration_equal(note.current().start, 510_ms);
-  assert_duration_equal(note.current().off, 510_ms + 25_us);
-  assert_duration_equal(note.current().end, 520_ms);
+  assert_duration_equal(note.current().duty, 25_us);
+  assert_duration_equal(note.current().period, 10_ms);
 
   TEST_ASSERT_FALSE(note.next());
 }
@@ -175,8 +181,8 @@ void test_note_vibrato(void) {
   for (int i = 0; i < 5000; i++) {
     auto start = note.current().start;
     auto freq = 100_hz + vib.offset(start);
-    assert_duration_equal(note.current().off, start + 100_us);
-    assert_duration_equal(note.current().end, start + freq.period());
+    assert_duration_equal(note.current().duty, 100_us);
+    assert_duration_equal(note.current().period, freq.period());
 
     note.next();
   }
