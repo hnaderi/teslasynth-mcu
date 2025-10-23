@@ -5,7 +5,7 @@
 #include "synthesizer/helpers/assertions.hpp"
 #include <cstddef>
 #include <cstdint>
-#include <synth.hpp>
+#include "notes.hpp"
 #include <unity.h>
 
 Config config{.a440 = 100_hz};

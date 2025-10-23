@@ -61,8 +61,10 @@ EnvelopeLevel Curve::update(Duration delta) {
 }
 
 Envelope::Envelope(ADSR configs)
-    : _configs(configs), _current(Curve(EnvelopeLevel(0), EnvelopeLevel(1),
-                                        configs.attack, configs.type)),
+    : _configs(configs),
+      _current(configs.type == Const ? Curve(configs.sustain)
+                                     : Curve(EnvelopeLevel(0), EnvelopeLevel(1),
+                                             configs.attack, configs.type)),
       _stage(Attack) {}
 
 Envelope::Envelope(EnvelopeLevel level) : Envelope(ADSR::constant(level)) {}
@@ -70,7 +72,7 @@ Envelope::Envelope(EnvelopeLevel level) : Envelope(ADSR::constant(level)) {}
 Duration Envelope::progress(Duration delta, bool on) {
   Duration remained = delta;
   auto dt = _current.will_reach_target(remained);
-  while (dt && !remained.is_zero()) {
+  while (dt && (!remained.is_zero() || !on)) {
     switch (_stage) {
     case Attack:
       _current = Curve(EnvelopeLevel(1), _configs.sustain, _configs.decay,
@@ -108,6 +110,5 @@ EnvelopeLevel Envelope::update(Duration delta, bool on) {
   if (is_off())
     return EnvelopeLevel(0);
   auto remained = progress(delta, on);
-  const auto lvl = _current.update(remained);
-  return lvl;
+  return _current.update(remained);
 }

@@ -7,7 +7,7 @@
 #include "midi_core.hpp"
 #include "midi_parser.hpp"
 #include "midi_synth.hpp"
-#include "synth.hpp"
+#include "notes.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>

@@ -6,7 +6,7 @@
 #include "midi_synth.hpp"
 #include "synthesizer/helpers/assertions.hpp"
 #include <cstdint>
-#include <synth.hpp>
+#include "notes.hpp"
 #include <unity.h>
 #include <vector>
 

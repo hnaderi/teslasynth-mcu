@@ -2,7 +2,7 @@
 #include "envelope.hpp"
 #include "instruments.hpp"
 #include "lfo.hpp"
-#include "synth.hpp"
+#include "notes.hpp"
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
@@ -46,9 +46,20 @@ bool Note::next() {
     _pulse.start = _now;
     _pulse.duty = _duty;
     _pulse.period = period;
-    _now += period;
-    _duty = _max_on_time *
-            _envelope.update(period, !_released || now() <= _release);
+
+    Duration next_tick = _now + period;
+    EnvelopeLevel lvl(0);
+    if (!_released || next_tick < _release)
+      lvl = _envelope.update(period, true);
+    else {
+      if (_now <= _release) {
+        _envelope.update(*(_release - _now), true);
+        lvl = _envelope.update(*(next_tick - _release), false);
+      } else
+        lvl = _envelope.update(period, false);
+    }
+    _duty = _max_on_time * lvl;
+    _now = next_tick;
   }
   return _active;
 }

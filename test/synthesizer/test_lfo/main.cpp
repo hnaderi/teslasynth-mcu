@@ -1,7 +1,7 @@
 #include "core.hpp"
 #include "lfo.hpp"
 #include "synthesizer/helpers/assertions.hpp"
-#include <synth.hpp>
+#include "notes.hpp"
 #include <unity.h>
 
 void test_flat(void) {

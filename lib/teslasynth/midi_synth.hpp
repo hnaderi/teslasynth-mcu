@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../midi/midi_core.hpp"
-#include "../synthesizer/synth.hpp"
+#include "../synthesizer/notes.hpp"
 #include <cstdint>
 
 template <class N = Notes> class SynthChannel {
@@ -66,6 +66,12 @@ public:
 
     Note *note = &notes_.next();
     Duration next_edge = note->current().start;
+    while (next_edge < clock_ && note->is_active()) {
+      note->next();
+      note = &notes_.next();
+      next_edge = note->current().start;
+    }
+
     Duration target = clock_ + max;
     if (!note->is_active() || next_edge > target) {
       res.period = max;
@@ -75,8 +81,8 @@ public:
       note->next();
       res.period = res.duty + config_.min_deadtime;
       clock_ += res.period;
-    } else if (next_edge < target) {
-      res.period = next_edge;
+    } else if (next_edge < target && next_edge > clock_) {
+      res.period = *(next_edge - clock_);
       clock_ = next_edge;
     }
     return res;

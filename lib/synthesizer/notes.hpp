@@ -21,6 +21,11 @@ struct NotePulse {
   Duration start, duty, period;
 
   constexpr bool is_zero() const { return duty.is_zero(); }
+  inline operator std::string() const {
+    return std::string("Note[start:") + std::string(start) +
+           ", duty:" + std::string(duty) + ", period:" + std::string(period) +
+           "]";
+  }
 };
 
 struct MidiNote {

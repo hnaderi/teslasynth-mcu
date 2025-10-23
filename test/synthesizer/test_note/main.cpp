@@ -1,7 +1,10 @@
+#include "core.hpp"
 #include "envelope.hpp"
 #include "lfo.hpp"
+#include "notes.hpp"
 #include "synthesizer/helpers/assertions.hpp"
-#include <synth.hpp>
+#include <iostream>
+#include <string>
 #include <unity.h>
 
 Note note;
@@ -174,6 +177,72 @@ void test_note_envelope(void) {
   TEST_ASSERT_FALSE(note.next());
 }
 
+void test_note_envelope2(void) {
+  Envelope envelope(
+      ADSR{200_ms, 200_ms, EnvelopeLevel(0.5), 20_ms, CurveType::Lin});
+  note.start(mnote1, 0_us, envelope, config);
+  assert_duration_equal(note.current().start, 0_ms);
+  assert_duration_equal(note.current().duty, 0_us);
+  assert_duration_equal(note.current().period, 10_ms);
+
+  note.next();
+  assert_duration_equal(note.current().start, 10_ms);
+  assert_duration_equal(note.current().duty, 5_us);
+  assert_duration_equal(note.current().period, 10_ms);
+
+  note.release(496_ms);
+  // Let's fast forward to 400ms (sustain)
+  for (int i = 0; i < 38; i++)
+    TEST_ASSERT_TRUE(note.next());
+
+  // Now we're at 400ms and on sustain
+  assert_duration_equal(note.now(), 400_ms);
+  for (int i = 0; i < 10; i++) {
+    note.next();
+    auto start = 400_ms + 10_ms * i;
+    assert_duration_equal(note.current().start, start);
+    assert_duration_equal(note.current().duty, 50_us);
+    assert_duration_equal(note.current().period, 10_ms);
+  }
+
+  // Now the release cycle has begun
+  assert_duration_equal(note.now(), 500_ms);
+  TEST_ASSERT_TRUE(note.next());
+  assert_duration_equal(note.current().start, 500_ms);
+  assert_duration_equal(note.current().duty, 40_us);
+  assert_duration_equal(note.current().period, 10_ms);
+
+  TEST_ASSERT_TRUE(note.next());
+  assert_duration_equal(note.current().start, 510_ms);
+  assert_duration_equal(note.current().duty, 15_us);
+  assert_duration_equal(note.current().period, 10_ms);
+
+  TEST_ASSERT_FALSE(note.next());
+}
+
+void test_note_envelope_constant(void) {
+  for (auto n = 1; n <= 10; n++) {
+    Envelope envelope(EnvelopeLevel(0.1 * n));
+    note.start(mnote1, 100_ms, envelope, config);
+    note.release(490_ms + Duration::millis(n));
+
+    // Let's fast forward to 500ms (sustain)
+    for (int i = 0; note.now() < 500_ms; i++) {
+      Duration time = 100_ms + 10_ms * i;
+      assert_duration_equal(note.current().start, time);
+      assert_duration_equal(note.current().duty, 10_us * n);
+      assert_duration_equal(note.current().period, 10_ms);
+      std::cout << std::string(note.current()) << std::endl;
+      TEST_ASSERT_TRUE(note.next());
+    }
+
+    // Now we're at 500ms and on sustain
+    assert_duration_equal(note.now(), 500_ms);
+
+    TEST_ASSERT_FALSE(note.next());
+  }
+}
+
 void test_note_vibrato(void) {
   Vibrato vib{1_hz, 50_hz};
   note.start(mnote1, 0_us, Envelope(EnvelopeLevel(1)), vib, config);
@@ -205,6 +274,8 @@ extern "C" void app_main(void) {
   RUN_TEST(test_note_second_start);
   RUN_TEST(test_note_start_after_release);
   RUN_TEST(test_note_envelope);
+  RUN_TEST(test_note_envelope2);
+  RUN_TEST(test_note_envelope_constant);
   RUN_TEST(test_note_vibrato);
   RUN_TEST(test_off);
   UNITY_END();
