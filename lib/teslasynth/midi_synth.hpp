@@ -51,9 +51,9 @@ public:
 };
 
 template <class N = Notes> class Sequencer {
-  N &notes_;
   Duration clock_ = Duration::zero();
   const Config &config_;
+  N &notes_;
 
 public:
   Sequencer(const Config &config, N &notes) : config_(config), notes_(notes) {}
