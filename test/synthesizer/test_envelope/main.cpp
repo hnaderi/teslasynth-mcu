@@ -2,6 +2,14 @@
 #include <envelope.hpp>
 #include <unity.h>
 
+void test_level_sanity(void) {
+  EnvelopeLevel level;
+  TEST_ASSERT_TRUE(level.is_zero());
+  level = EnvelopeLevel(0.5);
+  TEST_ASSERT_FALSE(level.is_zero());
+
+  TEST_ASSERT_TRUE(EnvelopeLevel::max() == EnvelopeLevel(1));
+}
 void test_level_comparison(void) {
   TEST_ASSERT_TRUE(EnvelopeLevel(0.01) > EnvelopeLevel(0));
   TEST_ASSERT_TRUE(EnvelopeLevel(0.01) < EnvelopeLevel(0.02));
@@ -256,6 +264,7 @@ void test_envelope_comparison(void) {
 
 extern "C" void app_main(void) {
   UNITY_BEGIN();
+  RUN_TEST(test_level_sanity);
   RUN_TEST(test_level_comparison);
   RUN_TEST(test_level_arithmetic);
   RUN_TEST(test_level_to_duration);

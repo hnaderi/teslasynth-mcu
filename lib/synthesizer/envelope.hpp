@@ -13,11 +13,16 @@ class EnvelopeLevel {
   float _value;
 
 public:
+  constexpr explicit EnvelopeLevel() : _value(0) {}
   constexpr explicit EnvelopeLevel(float level)
       : _value(level > 1   ? 1.f
                : level < 0 ? 0.f
                            : level) {}
 
+  constexpr static EnvelopeLevel zero() { return EnvelopeLevel(); }
+  constexpr static EnvelopeLevel max() { return EnvelopeLevel(1); }
+
+  constexpr bool is_zero() const { return _value == 0; }
   constexpr EnvelopeLevel operator+(const EnvelopeLevel &b) const {
     return EnvelopeLevel(_value + b._value);
   }

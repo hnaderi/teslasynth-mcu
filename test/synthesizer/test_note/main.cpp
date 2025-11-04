@@ -3,8 +3,6 @@
 #include "lfo.hpp"
 #include "notes.hpp"
 #include "synthesizer/helpers/assertions.hpp"
-#include <iostream>
-#include <string>
 #include <unity.h>
 
 Note note;
