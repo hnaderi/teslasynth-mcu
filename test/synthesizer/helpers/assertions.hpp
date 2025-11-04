@@ -8,7 +8,7 @@
 
 namespace synth {
 namespace assertions {
-template <typename T> inline std::string __msg_for(T a, T b) {
+template <typename A, typename B> inline std::string __msg_for(A a, B b) {
   return std::string("Obtained: " + std::string(a) +
                      " Expected: " + std::string(b));
 }
@@ -20,19 +20,19 @@ inline void assert_level_not_equal(EnvelopeLevel a, EnvelopeLevel b, int line) {
   UNITY_TEST_ASSERT(a != b, line, __msg_for(a, b).c_str());
 }
 
-template <typename T>
-inline void assert_duration_equal(SimpleDuration<T> a, SimpleDuration<T> b,
+template <typename A, typename B>
+inline void assert_duration_equal(SimpleDuration<A> a, SimpleDuration<B> b,
                                   int line) {
   UNITY_TEST_ASSERT(a == b, line, __msg_for(a, b).c_str());
 }
-template <typename T>
-inline void assert_duration_equal(std::optional<SimpleDuration<T>> a,
-                                  SimpleDuration<T> b, int line) {
+template <typename A, typename B>
+inline void assert_duration_equal(std::optional<SimpleDuration<A>> a,
+                                  SimpleDuration<B> b, int line) {
   UNITY_TEST_ASSERT(a, line, "No duration!");
   UNITY_TEST_ASSERT(a == b, line, __msg_for(*a, b).c_str());
 }
-template <typename T>
-inline void assert_duration_not_equal(SimpleDuration<T> a, SimpleDuration<T> b,
+template <typename A, typename B>
+inline void assert_duration_not_equal(SimpleDuration<A> a, SimpleDuration<B> b,
                                       int line) {
   UNITY_TEST_ASSERT(a != b, line, __msg_for(a, b).c_str());
 }
