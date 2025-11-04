@@ -1,6 +1,6 @@
 #pragma once
 
-#include "notes.hpp"
+#include "midi_synth.hpp"
 
 void rmt_driver(void);
-void pulse_write(const NotePulse  *pulse, size_t len);
+void pulse_write(const Pulse  *pulse, size_t len);

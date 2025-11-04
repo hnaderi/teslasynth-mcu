@@ -6,7 +6,6 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "hal/rmt_types.h"
-#include "lib/synthesizer/notes.hpp"
 #include "soc/gpio_num.h"
 #include <cstdint>
 #include <stddef.h>
@@ -17,23 +16,21 @@
 
 static const char *TAG = "RMT-DRIVER";
 
-void symbol_for_idx(NotePulse const *current, rmt_symbol_word_t *symbol) {
+void symbol_for_idx(Pulse const *current, rmt_symbol_word_t *symbol) {
   if (current->is_zero()) {
-    uint16_t d0 = current->period.micros<uint16_t>() / 2,
-             d1 = current->period.micros<uint16_t>() - d0;
     *symbol = {
-        .duration0 = d0,
+        // TODO consider overflows
+        .duration0 = static_cast<uint16_t>(current->period.micros() - 1),
         .level0 = 0,
-        .duration1 = d1,
+        .duration1 = 1,
         .level1 = 0,
     };
   } else {
     *symbol = {
-        .duration0 = current->duty.micros<uint16_t>(),
+        .duration0 = static_cast<uint16_t>(current->duty.micros()),
         .level0 = 1,
-        .duration1 =
-            static_cast<uint16_t>(current->period.micros<uint16_t>() -
-                                  current->duty.micros<uint16_t>()), // NOTE
+        .duration1 = static_cast<uint16_t>(current->period.micros() -
+                                           current->duty.micros()), // NOTE
         .level1 = 0,
     };
   }
@@ -42,13 +39,13 @@ void symbol_for_idx(NotePulse const *current, rmt_symbol_word_t *symbol) {
 static size_t callback(const void *data, size_t data_size,
                        size_t symbols_written, size_t symbols_free,
                        rmt_symbol_word_t *symbols, bool *done, void *arg) {
-  const NotePulse *input = static_cast<const NotePulse *>(data);
-  const size_t data_length = data_size / sizeof(NotePulse);
+  const Pulse *input = static_cast<const Pulse *>(data);
+  const size_t data_length = data_size / sizeof(Pulse);
 
   size_t written = 0;
   for (; written < symbols_free && symbols_written + written < data_length;
        written++) {
-    NotePulse const *current = &input[symbols_written + written];
+    Pulse const *current = &input[symbols_written + written];
     symbol_for_idx(current, &symbols[written]);
   }
   if (written + symbols_written == data_length)
@@ -100,7 +97,7 @@ void rmt_driver(void) {
   ESP_ERROR_CHECK(rmt_enable(audio_chan));
 }
 
-void pulse_write(const NotePulse *pulse, size_t len) {
-  ESP_ERROR_CHECK(rmt_transmit(audio_chan, encoder, pulse,
-                               len * sizeof(NotePulse), &tx_config));
+void pulse_write(const Pulse *pulse, size_t len) {
+  ESP_ERROR_CHECK(rmt_transmit(audio_chan, encoder, pulse, len * sizeof(Pulse),
+                               &tx_config));
 }

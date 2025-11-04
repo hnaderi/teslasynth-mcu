@@ -61,16 +61,18 @@ void synth(void *pvParams) {
   }
 }
 
-void render(void *pvParams) {
-  // NotePulse pulses[] = {
-  //     {0_ms, 250_us, 1_ms}, {0_ms, 0_us, 1_ms},   {0_ms, 400_us, 1_ms},
-  //     {0_ms, 100_us, 1_ms}, {0_ms, 100_us, 6_ms},
-  // };
-  // while (true) {
-  //   vTaskDelay(pdMS_TO_TICKS(10));
-  //   pulse_write(pulses, 5);
-  // }
+void test_tune(void *pvParams) {
+  Pulse pulses[] = {
+      {250_us, 1_ms}, {0_us, 1_ms},   {400_us, 1_ms},
+      {100_us, 1_ms}, {100_us, 6_ms},
+  };
+  while (true) {
+    vTaskDelay(pdMS_TO_TICKS(10));
+    pulse_write(pulses, 5);
+  }
+}
 
+void render(void *pvParams) {
   Sequencer<> seq(config, notes, track);
   constexpr TickType_t prefillTime = pdMS_TO_TICKS(10),
                        loopTime = pdMS_TO_TICKS(5);
@@ -78,7 +80,7 @@ void render(void *pvParams) {
   vTaskDelay(prefillTime);
 
   int64_t processed = esp_timer_get_time();
-  NotePulse buffer[BUFFER_SIZE];
+  Pulse buffer[BUFFER_SIZE];
 
   while (true) {
     vTaskDelay(loopTime);
@@ -88,7 +90,7 @@ void render(void *pvParams) {
     for (size_t i = 0; processed < now; i++) {
       auto left = Duration::micros(now - processed);
       buffer[i] = seq.sample(left);
-      processed += buffer[i].period.micros<uint64_t>();
+      processed += buffer[i].period.micros();
       if (i == BUFFER_SIZE || processed >= now) {
         pulse_write(buffer, i + 1);
         i = 0;
