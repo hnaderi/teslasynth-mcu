@@ -4,14 +4,19 @@
 #include "lfo.hpp"
 #include "midi_synth.hpp"
 #include "synthesizer/helpers/assertions.hpp"
+#include <cstddef>
 #include <cstdint>
 #include <unity.h>
 #include <vector>
 
-constexpr Config config{
-    .min_deadtime = 100_us,
-    .a440 = 100_hz,
-};
+constexpr Config config_(size_t notes) {
+  return {
+      .min_deadtime = 100_us,
+      .a440 = 100_hz,
+      .notes = notes,
+  };
+}
+constexpr Config config = config_(4);
 constexpr MidiNote mnotef(int i) { return {static_cast<uint8_t>(69 + i), 127}; }
 constexpr Instrument instrument{.envelope = ADSR::constant(EnvelopeLevel(1)),
                                 .vibrato = Vibrato::none()};
@@ -66,8 +71,8 @@ void test_should_sequence_empty(void) {
   for (auto i = 0; i < 100; i++) {
     Duration step = Duration::millis(i);
     auto pulse = seq.sample(step);
+    TEST_ASSERT_TRUE(pulse.is_zero());
     assert_duration_equal(track.played_time(), Duration::zero());
-    assert_duration_equal(pulse.start, Duration::zero());
     assert_duration_equal(pulse.duty, 0_ms);
     assert_duration_equal(pulse.period, step);
     time += step;
@@ -85,7 +90,6 @@ void test_should_sequence_empty_when_no_notes_are_playing(void) {
     Duration step = Duration::millis(i);
     auto pulse = seq.sample(step);
     assert_duration_equal(track.played_time(), time + step);
-    assert_duration_equal(pulse.start, time);
     assert_duration_equal(pulse.duty, 0_ms);
     assert_duration_equal(pulse.period, step);
     time += step;
@@ -100,24 +104,22 @@ void test_should_sequence_single(void) {
   assert_duration_equal(track.played_time(), 0_ms);
   notes.start(mnotef(0), 10_ms, instrument, config);
 
-  NotePulse pulse = seq.sample(20_ms);
+  Pulse pulse = seq.sample(20_ms);
   assert_duration_equal(track.played_time(), 10_ms);
-  assert_duration_equal(pulse.start, 0_ms);
   assert_duration_equal(pulse.duty, 0_ms);
   assert_duration_equal(pulse.period, 10_ms);
 
   notes.release(mnotef(0), 1_s);
 
   for (auto i = 1; track.played_time() < 1_s; i++) {
-    NotePulse pulse2 = seq.sample(10_ms);
+    Pulse pulse2 = seq.sample(10_ms);
     Duration time = 10_ms * i;
-    assert_duration_equal(pulse2.start, time);
-    assert_duration_equal(pulse2.duty, 100_us);
-    assert_duration_equal(pulse2.period, 100_us + config.min_deadtime);
+    assert_duration_equal(pulse2.duty, config.max_on_time);
+    assert_duration_equal(pulse2.period,
+                          config.max_on_time + config.min_deadtime);
     assert_duration_equal(track.played_time(), time + pulse2.period);
 
-    NotePulse pulse3 = seq.sample(10_ms);
-    assert_duration_equal(pulse3.start, time + 100_us + config.min_deadtime);
+    Pulse pulse3 = seq.sample(10_ms);
     assert_duration_equal(pulse3.duty, 0_us);
     assert_duration_equal(pulse3.period,
                           track.played_time() < 1_s ? 9800_us : 10_ms);
@@ -138,26 +140,22 @@ void test_should_sequence_polyphonic(void) {
   notes.start(mnotef(0), 10_ms, instrument, config);
   notes.start(mnotef(12), 10_ms, instrument, config);
 
-  NotePulse pulse = seq.sample(20_ms);
+  Pulse pulse = seq.sample(20_ms);
   assert_duration_equal(track.played_time(), 10_ms);
-  assert_duration_equal(pulse.start, 0_ms);
   assert_duration_equal(pulse.duty, 0_ms);
   assert_duration_equal(pulse.period, 10_ms);
 
-  NotePulse pulse2 = seq.sample(10_ms);
-  assert_duration_equal(pulse2.start, 10_ms);
+  Pulse pulse2 = seq.sample(10_ms);
   assert_duration_equal(pulse2.duty, 100_us);
   assert_duration_equal(pulse2.period, 100_us + config.min_deadtime);
   assert_duration_equal(track.played_time(), 10_ms + pulse2.period);
 
-  NotePulse pulse3 = seq.sample(10_ms);
-  assert_duration_equal(pulse3.start, 10_ms + pulse2.period);
+  Pulse pulse3 = seq.sample(10_ms);
   assert_duration_equal(pulse3.duty, 0_us);
   assert_duration_equal(pulse3.period, *(5_ms - pulse2.period));
   assert_duration_equal(track.played_time(), 15_ms);
 
-  NotePulse pulse4 = seq.sample(10_ms);
-  assert_duration_equal(pulse4.start, 15_ms);
+  Pulse pulse4 = seq.sample(10_ms);
   assert_duration_equal(pulse4.duty, 100_us);
   assert_duration_equal(pulse4.period, 100_us + config.min_deadtime);
   assert_duration_equal(track.played_time(), 15_ms + pulse4.period);
@@ -172,29 +170,78 @@ void test_should_sequence_polyphonic_out_of_phase(void) {
   notes.start(mnotef(0), 10_ms, instrument, config);
   notes.start(mnotef(12), 11_ms, instrument, config);
 
-  NotePulse pulse = seq.sample(20_ms);
+  Pulse pulse = seq.sample(20_ms);
   assert_duration_equal(track.played_time(), 10_ms);
-  assert_duration_equal(pulse.start, 0_ms);
   assert_duration_equal(pulse.duty, 0_ms);
   assert_duration_equal(pulse.period, 10_ms);
 
-  NotePulse pulse2 = seq.sample(10_ms);
-  assert_duration_equal(pulse2.start, 10_ms);
+  Pulse pulse2 = seq.sample(10_ms);
   assert_duration_equal(pulse2.duty, 100_us);
   assert_duration_equal(pulse2.period, 100_us + config.min_deadtime);
   assert_duration_equal(track.played_time(), 10_ms + pulse2.period);
 
-  NotePulse pulse3 = seq.sample(10_ms);
-  assert_duration_equal(pulse3.start, 10_ms + pulse2.period);
+  Pulse pulse3 = seq.sample(10_ms);
   assert_duration_equal(pulse3.duty, 0_us);
   assert_duration_equal(pulse3.period, *(1_ms - pulse2.period));
   assert_duration_equal(track.played_time(), 11_ms);
 
-  NotePulse pulse4 = seq.sample(10_ms);
-  assert_duration_equal(pulse4.start, 11_ms);
+  Pulse pulse4 = seq.sample(10_ms);
   assert_duration_equal(pulse4.duty, 100_us);
   assert_duration_equal(pulse4.period, 100_us + config.min_deadtime);
   assert_duration_equal(track.played_time(), 11_ms + pulse4.period);
+}
+
+void assert_plays(Sequencer<> &seq, TrackState &track, Duration duty,
+                  Duration period, Duration start, Duration release) {
+  const Duration pduty = duty + config.min_deadtime;
+
+  while (track.played_time() < start) {
+    seq.sample(1_ms);
+  }
+  assert_duration_equal(track.played_time(), start);
+
+  for (auto i = 0; track.played_time() < release; i++) {
+    Duration budget = 10_ms;
+
+    Pulse pulse = seq.sample(budget);
+    Duration time = period * i;
+    assert_duration_equal(pulse.duty, duty);
+    assert_duration_equal(pulse.period, pduty);
+    assert_duration_equal(track.played_time(), start + time + pulse.period);
+
+    Duration low_duty = *(period - pduty);
+    budget = *(budget - pduty);
+    Duration left = track.played_time() < release ? low_duty : budget;
+
+    Pulse pulse3 = seq.sample(budget);
+    assert_duration_equal(pulse3.duty, 0_us);
+    assert_duration_equal(pulse3.period, std::min(left, budget));
+    // assert_duration_equal(track.played_time(), start + time + period);
+  }
+  // assert_duration_equal(track.played_time(), release);
+}
+
+void test_should_sequence_monophonic_tracks(void) {
+  Notes notes(config_(2));
+  TrackState track;
+  track.on_receive(Duration::zero());
+  Sequencer<> seq(config, notes, track);
+  assert_duration_equal(track.played_time(), 0_ms);
+
+  notes.start(mnotef(0), 10_ms, instrument, config);
+  notes.release(mnotef(0), 1_s);
+  notes.start(mnotef(12), 1_s, instrument, config);
+  notes.release(mnotef(12), 2_s);
+
+  TEST_ASSERT_EQUAL(2, notes.active());
+  assert_plays(seq, track, 100_us, 10_ms, 10_ms, 1_s);
+  TEST_ASSERT_EQUAL(1, notes.active());
+  assert_plays(seq, track, 100_us, 5_ms, 1_s, 2_s);
+  TEST_ASSERT_EQUAL(0, notes.active());
+
+  notes.start(mnotef(-12), 2250_ms, instrument, config);
+  notes.release(mnotef(-12), 3_s);
+  assert_plays(seq, track, 100_us, 20_ms, 2250_ms, 3_s);
 }
 
 extern "C" void app_main(void) {
@@ -206,6 +253,7 @@ extern "C" void app_main(void) {
   RUN_TEST(test_should_sequence_single);
   RUN_TEST(test_should_sequence_polyphonic);
   RUN_TEST(test_should_sequence_polyphonic_out_of_phase);
+  // RUN_TEST(test_should_sequence_monophonic_tracks);
   UNITY_END();
 }
 int main(int argc, char **argv) { app_main(); }

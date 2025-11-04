@@ -23,13 +23,13 @@ void test_empty(void) {
   TEST_ASSERT_TRUE(note.frequency().is_zero());
 
   TEST_ASSERT_TRUE(note.current().start.is_zero());
-  TEST_ASSERT_TRUE(note.current().duty.is_zero());
+  TEST_ASSERT_TRUE(note.current().volume.is_zero());
   TEST_ASSERT_TRUE(note.current().period.is_zero());
 
   TEST_ASSERT_FALSE(note.next());
 
   TEST_ASSERT_TRUE(note.current().start.is_zero());
-  TEST_ASSERT_TRUE(note.current().duty.is_zero());
+  TEST_ASSERT_TRUE(note.current().volume.is_zero());
   TEST_ASSERT_TRUE(note.current().period.is_zero());
 }
 
@@ -47,7 +47,7 @@ void test_started_note_initial_state(void) {
   TEST_ASSERT_TRUE(note.is_active());
   TEST_ASSERT_FALSE(note.is_released());
   assert_duration_equal(note.current().start, 100_us);
-  assert_duration_equal(note.current().duty, 100_us);
+  assert_level_equal(note.current().volume, EnvelopeLevel::max());
   assert_duration_equal(note.current().period, 10000_us);
 }
 
@@ -59,7 +59,7 @@ void test_started_note_initial_time(void) {
 void test_note_next(void) {
   note.next();
   assert_duration_equal(note.current().start, 10100_us);
-  assert_duration_equal(note.current().duty, 100_us);
+  assert_level_equal(note.current().volume, EnvelopeLevel::max());
   assert_duration_equal(note.current().period, 10_ms);
 }
 
@@ -77,7 +77,7 @@ void test_note_release(void) {
   TEST_ASSERT_TRUE(note.is_released());
   assert_duration_equal(note.now(), 30100_us);
   assert_duration_equal(note.current().start, 20100_us);
-  assert_duration_equal(note.current().duty, 100_us);
+  assert_level_equal(note.current().volume, EnvelopeLevel::max());
   assert_duration_equal(note.current().period, 10_ms);
 
   TEST_ASSERT_FALSE(note.next());
@@ -85,7 +85,7 @@ void test_note_release(void) {
   TEST_ASSERT_TRUE(note.is_released());
   assert_duration_equal(note.now(), 30100_us);
   assert_duration_equal(note.current().start, 20100_us);
-  assert_duration_equal(note.current().duty, 100_us);
+  assert_level_equal(note.current().volume, EnvelopeLevel::max());
   assert_duration_equal(note.current().period, 10_ms);
 }
 
@@ -103,7 +103,7 @@ void test_note_release_with_zero_velocity(void) {
   TEST_ASSERT_TRUE(note.is_released());
   assert_duration_equal(note.now(), 30100_us);
   assert_duration_equal(note.current().start, 20100_us);
-  assert_duration_equal(note.current().duty, 100_us);
+  assert_level_equal(note.current().volume, EnvelopeLevel::max());
   assert_duration_equal(note.current().period, 10_ms);
 
   TEST_ASSERT_FALSE(note.next());
@@ -111,19 +111,19 @@ void test_note_release_with_zero_velocity(void) {
   TEST_ASSERT_TRUE(note.is_released());
   assert_duration_equal(note.now(), 30100_us);
   assert_duration_equal(note.current().start, 20100_us);
-  assert_duration_equal(note.current().duty, 100_us);
+  assert_level_equal(note.current().volume, EnvelopeLevel::max());
   assert_duration_equal(note.current().period, 10_ms);
 }
 
 void test_note_second_start(void) {
   note.next();
   assert_duration_equal(note.current().start, 10100_us);
-  assert_duration_equal(note.current().duty, 100_us);
+  assert_level_equal(note.current().volume, EnvelopeLevel::max());
   assert_duration_equal(note.current().period, 10_ms);
 
   note.start({69 + 12, 127}, 100_ms, envelope, config);
   assert_duration_equal(note.current().start, 100_ms);
-  assert_duration_equal(note.current().duty, 100_us);
+  assert_level_equal(note.current().volume, EnvelopeLevel::max());
   assert_duration_equal(note.current().period, 5_ms);
 }
 
@@ -137,12 +137,12 @@ void test_note_envelope(void) {
       ADSR{200_ms, 200_ms, EnvelopeLevel(0.5), 20_ms, CurveType::Lin});
   note.start(mnote1, 0_us, envelope, config);
   assert_duration_equal(note.current().start, 0_ms);
-  assert_duration_equal(note.current().duty, 0_us);
+  assert_level_equal(note.current().volume, EnvelopeLevel::zero());
   assert_duration_equal(note.current().period, 10_ms);
 
   note.next();
   assert_duration_equal(note.current().start, 10_ms);
-  assert_duration_equal(note.current().duty, 5_us);
+  assert_level_equal(note.current().volume, EnvelopeLevel(0.05f));
   assert_duration_equal(note.current().period, 10_ms);
 
   note.release(500_ms);
@@ -156,7 +156,7 @@ void test_note_envelope(void) {
     note.next();
     auto start = 400_ms + 10_ms * i;
     assert_duration_equal(note.current().start, start);
-    assert_duration_equal(note.current().duty, 50_us);
+    assert_level_equal(note.current().volume, EnvelopeLevel(0.5f));
     assert_duration_equal(note.current().period, 10_ms);
   }
 
@@ -164,12 +164,12 @@ void test_note_envelope(void) {
   assert_duration_equal(note.now(), 500_ms);
   TEST_ASSERT_TRUE(note.next());
   assert_duration_equal(note.current().start, 500_ms);
-  assert_duration_equal(note.current().duty, 50_us);
+  assert_level_equal(note.current().volume, EnvelopeLevel(0.5f));
   assert_duration_equal(note.current().period, 10_ms);
 
   TEST_ASSERT_TRUE(note.next());
   assert_duration_equal(note.current().start, 510_ms);
-  assert_duration_equal(note.current().duty, 25_us);
+  assert_level_equal(note.current().volume, EnvelopeLevel(0.25f));
   assert_duration_equal(note.current().period, 10_ms);
 
   TEST_ASSERT_FALSE(note.next());
@@ -180,12 +180,12 @@ void test_note_envelope2(void) {
       ADSR{200_ms, 200_ms, EnvelopeLevel(0.5), 20_ms, CurveType::Lin});
   note.start(mnote1, 0_us, envelope, config);
   assert_duration_equal(note.current().start, 0_ms);
-  assert_duration_equal(note.current().duty, 0_us);
+  assert_level_equal(note.current().volume, EnvelopeLevel::zero());
   assert_duration_equal(note.current().period, 10_ms);
 
   note.next();
   assert_duration_equal(note.current().start, 10_ms);
-  assert_duration_equal(note.current().duty, 5_us);
+  assert_level_equal(note.current().volume, EnvelopeLevel(0.05f));
   assert_duration_equal(note.current().period, 10_ms);
 
   note.release(496_ms);
@@ -199,7 +199,7 @@ void test_note_envelope2(void) {
     note.next();
     auto start = 400_ms + 10_ms * i;
     assert_duration_equal(note.current().start, start);
-    assert_duration_equal(note.current().duty, 50_us);
+    assert_level_equal(note.current().volume, EnvelopeLevel(0.5f));
     assert_duration_equal(note.current().period, 10_ms);
   }
 
@@ -207,12 +207,12 @@ void test_note_envelope2(void) {
   assert_duration_equal(note.now(), 500_ms);
   TEST_ASSERT_TRUE(note.next());
   assert_duration_equal(note.current().start, 500_ms);
-  assert_duration_equal(note.current().duty, 40_us);
+  assert_level_equal(note.current().volume, EnvelopeLevel(0.4f));
   assert_duration_equal(note.current().period, 10_ms);
 
   TEST_ASSERT_TRUE(note.next());
   assert_duration_equal(note.current().start, 510_ms);
-  assert_duration_equal(note.current().duty, 15_us);
+  assert_level_equal(note.current().volume, EnvelopeLevel(0.15f));
   assert_duration_equal(note.current().period, 10_ms);
 
   TEST_ASSERT_FALSE(note.next());
@@ -220,16 +220,15 @@ void test_note_envelope2(void) {
 
 void test_note_envelope_constant(void) {
   for (auto n = 1; n <= 10; n++) {
-    Envelope envelope(EnvelopeLevel(0.1 * n));
+    EnvelopeLevel volume(0.1 * n);
+    Envelope envelope(volume);
     note.start(mnote1, 100_ms, envelope, config);
     note.release(490_ms + Duration::millis(n));
-
-    Duration duty = 10_us * n;
 
     for (int i = 0; note.now() < 500_ms; i++) {
       Duration time = 100_ms + 10_ms * i;
       assert_duration_equal(note.current().start, time);
-      assert_duration_equal(note.current().duty, duty);
+      assert_level_equal(note.current().volume, volume);
       assert_duration_equal(note.current().period, 10_ms);
       TEST_ASSERT_TRUE(note.next());
     }
@@ -239,7 +238,7 @@ void test_note_envelope_constant(void) {
     for (int i = 0; i < 10; i++) {
       TEST_ASSERT_FALSE(note.next());
       assert_duration_equal(note.current().start, 490_ms);
-      assert_duration_equal(note.current().duty, duty);
+      assert_level_equal(note.current().volume, volume);
       assert_duration_equal(note.current().period, 10_ms);
     }
   }
@@ -252,7 +251,7 @@ void test_note_vibrato(void) {
   for (int i = 0; i < 5000; i++) {
     auto start = note.current().start;
     auto freq = 100_hz + vib.offset(start);
-    assert_duration_equal(note.current().duty, 100_us);
+    assert_level_equal(note.current().volume, EnvelopeLevel::max());
     assert_duration_equal(note.current().period, freq.period());
 
     note.next();

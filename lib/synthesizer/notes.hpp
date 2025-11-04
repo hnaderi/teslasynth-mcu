@@ -18,12 +18,14 @@ struct Config {
 };
 
 struct NotePulse {
-  Duration start, duty, period;
+  Duration start;
+  Duration32 period;
+  EnvelopeLevel volume;
 
-  constexpr bool is_zero() const { return duty.is_zero(); }
+  constexpr bool is_zero() const { return volume.is_zero(); }
   inline operator std::string() const {
     return std::string("Note[start:") + std::string(start) +
-           ", duty:" + std::string(duty) + ", period:" + std::string(period) +
+           ", vol:" + std::string(volume) + ", period:" + std::string(period) +
            "]";
   }
 };
@@ -32,8 +34,12 @@ struct MidiNote {
   uint8_t number;
   uint8_t velocity;
 
+  constexpr Hertz frequency(Hertz tuning = 440_hz) const {
+    return tuning * std::exp2f((number - 69) / 12.0f);
+  }
+
   constexpr Hertz frequency(const Config &config) const {
-    return config.a440 * std::exp2f((number - 69) / 12.0f);
+    return frequency(config.a440);
   }
 
   constexpr EnvelopeLevel volume() const {
@@ -50,14 +56,17 @@ struct MidiNote {
 class Note {
   Hertz _freq = Hertz(0);
   Envelope _envelope =
-      Envelope(ADSR{0_ns, 0_ns, EnvelopeLevel(0), 0_ns, CurveType::Lin});
+      Envelope(ADSR{0_us, 0_us, EnvelopeLevel(0), 0_us, CurveType::Lin});
   Vibrato _vibrato;
   NotePulse _pulse;
-  Duration _release, _max_on_time, _duty, _now;
+  EnvelopeLevel _level;
+  Duration _release, _now;
   bool _active = false;
   bool _released = false;
 
 public:
+  void start(const MidiNote &mnote, Duration time, Envelope env,
+             Vibrato vibrato, Hertz tuning);
   void start(const MidiNote &mnote, Duration time, const Instrument &instrument,
              const Config &config);
   void start(const MidiNote &mnote, Duration time, Envelope env,

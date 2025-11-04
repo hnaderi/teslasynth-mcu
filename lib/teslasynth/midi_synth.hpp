@@ -117,6 +117,16 @@ public:
   }
 };
 
+struct Pulse {
+  Duration32 duty, period;
+
+  constexpr bool is_zero() const { return duty.is_zero(); }
+  inline operator std::string() const {
+    return std::string("Pulse[duty:") + std::string(duty) +
+           ", period:" + std::string(period) + "]";
+  }
+};
+
 template <class N = Notes, class TR = TrackState> class Sequencer {
   const Config &config_;
   N &notes_;
@@ -126,9 +136,8 @@ public:
   Sequencer(const Config &config, N &notes, TR &track)
       : config_(config), notes_(notes), track_(track) {}
 
-  NotePulse sample(Duration max) {
-    NotePulse res;
-    res.start = track_.played_time();
+  Pulse sample(Duration max) {
+    Pulse res;
 
     Note *note = &notes_.next();
     Duration next_edge = note->current().start;
@@ -143,9 +152,9 @@ public:
       res.period = max;
       track_.on_play(max);
     } else if (next_edge == track_.played_time()) {
-      res = note->current();
-      note->next();
+      res.duty = note->current().volume * config_.max_on_time;
       res.period = res.duty + config_.min_deadtime;
+      note->next();
       track_.on_play(res.period);
     } else if (next_edge <= target && next_edge >= track_.played_time()) {
       res.period = *(next_edge - track_.played_time());

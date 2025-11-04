@@ -9,17 +9,21 @@
 #include <cstdint>
 
 void Note::start(const MidiNote &mnote, Duration time, Envelope env,
-                 Vibrato vibrato, const Config &config) {
+                 Vibrato vibrato, Hertz tuning) {
   if (_active && mnote.velocity == 0)
     return release(time);
-  _freq = mnote.frequency(config);
-  _max_on_time = mnote.volume() * config.max_on_time;
+  _freq = mnote.frequency(tuning);
   _envelope = env;
   _vibrato = vibrato;
   _active = true;
-  _duty = _max_on_time * _envelope.update(0_us, true);
+  _level = _envelope.update(0_us, true);
   _now = time;
   next();
+}
+
+void Note::start(const MidiNote &mnote, Duration time, Envelope env,
+                 Vibrato vibrato, const Config &config) {
+  start(mnote, time, env, vibrato, config.a440);
 }
 
 void Note::start(const MidiNote &mnote, Duration time, Envelope env,
@@ -42,9 +46,9 @@ bool Note::next() {
   if (_envelope.is_off())
     _active = false;
   if (_active) {
-    Duration period = (_freq + _vibrato.offset(now())).period();
+    Duration32 period = (_freq + _vibrato.offset(now())).period();
     _pulse.start = _now;
-    _pulse.duty = _duty;
+    _pulse.volume = _level;
     _pulse.period = period;
 
     Duration next_tick = _now + period;
@@ -58,7 +62,7 @@ bool Note::next() {
       } else
         lvl = _envelope.update(period, false);
     }
-    _duty = _max_on_time * lvl;
+    _level = lvl;
     _now = next_tick;
   }
   return _active;
