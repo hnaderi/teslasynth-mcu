@@ -16,6 +16,7 @@ void Note::start(const MidiNote &mnote, Duration time, Envelope env,
   _envelope = env;
   _vibrato = vibrato;
   _active = true;
+  _released = false;
   _level = _envelope.update(0_us, true);
   _now = time;
   next();

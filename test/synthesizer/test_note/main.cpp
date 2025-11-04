@@ -125,6 +125,9 @@ void test_note_second_start(void) {
   assert_duration_equal(note.current().start, 100_ms);
   assert_level_equal(note.current().volume, EnvelopeLevel::max());
   assert_duration_equal(note.current().period, 5_ms);
+
+  TEST_ASSERT_FALSE(note.is_released());
+  TEST_ASSERT_TRUE(note.is_active());
 }
 
 void test_note_start_after_release(void) {
