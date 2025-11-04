@@ -118,12 +118,14 @@ public:
 };
 
 struct Pulse {
-  Duration32 duty, period;
+  Duration32 on, off;
 
-  constexpr bool is_zero() const { return duty.is_zero(); }
+  constexpr bool is_zero() const { return on.is_zero(); }
+  constexpr Duration32 length() const { return on + off; }
+
   inline operator std::string() const {
-    return std::string("Pulse[duty:") + std::string(duty) +
-           ", period:" + std::string(period) + "]";
+    return std::string("Pulse[on:") + std::string(on) +
+           ", off:" + std::string(off) + "]";
   }
 };
 
@@ -149,16 +151,16 @@ public:
 
     Duration target = track_.played_time() + max;
     if (!note->is_active() || next_edge > target || !track_.is_playing()) {
-      res.period = max;
+      res.off = max;
       track_.on_play(max);
     } else if (next_edge == track_.played_time()) {
-      res.duty = note->current().volume * config_.max_on_time;
-      res.period = res.duty + config_.min_deadtime;
+      res.on = note->current().volume * config_.max_on_time;
+      res.off = config_.min_deadtime;
       note->next();
-      track_.on_play(res.period);
+      track_.on_play(res.on + res.off);
     } else if (next_edge <= target && next_edge >= track_.played_time()) {
-      res.period = *(next_edge - track_.played_time());
-      track_.on_play(res.period);
+      res.off = *(next_edge - track_.played_time());
+      track_.on_play(res.off);
     }
     return res;
   }
