@@ -23,7 +23,10 @@ jobs:
         run: pip install --upgrade platformio
 
       - name: Build PlatformIO Project
-        run: pio run
+        run: pio run -e lolin32
+
+      - name: Run linting checks
+        run: pio check
 
       - name: Run tests
         run: pio test -e native --verbose
