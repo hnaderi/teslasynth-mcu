@@ -1,4 +1,5 @@
 #include "synthesizer/helpers/assertions.hpp"
+#include <cmath>
 #include <envelope.hpp>
 #include <unity.h>
 
@@ -46,11 +47,28 @@ void test_level_arithmetic(void) {
   assert_level_equal((EnvelopeLevel(1) += 0.5f), EnvelopeLevel(1));
   assert_level_equal((EnvelopeLevel(1) += -0.5f), EnvelopeLevel(0.5));
   assert_level_equal((EnvelopeLevel(1) += -2.f), EnvelopeLevel(0));
+
+  assert_level_equal(EnvelopeLevel(0.5) * EnvelopeLevel(0.5),
+                     EnvelopeLevel(0.25));
+  assert_level_equal(EnvelopeLevel(0.5) * EnvelopeLevel(1), EnvelopeLevel(0.5));
+  assert_level_equal(EnvelopeLevel(0.5) * EnvelopeLevel(0), EnvelopeLevel(0));
 }
 void test_level_to_duration(void) {
   assert_duration_equal(EnvelopeLevel(0.01) * 1_ms, 10_us);
   assert_duration_equal(EnvelopeLevel(0.1) * 1_ms, 100_us);
   assert_duration_equal(EnvelopeLevel(1) * 1_ms, 1_ms);
+}
+void test_level_logscale(void) {
+  assert_level_equal(EnvelopeLevel::logscale(0), EnvelopeLevel(0));
+
+  assert_level_equal(EnvelopeLevel::logscale(3), EnvelopeLevel(2.f / 8.f));
+  assert_level_equal(EnvelopeLevel::logscale(7), EnvelopeLevel(3.f / 8.f));
+  assert_level_equal(EnvelopeLevel::logscale(15), EnvelopeLevel(4.f / 8.f));
+  assert_level_equal(EnvelopeLevel::logscale(31), EnvelopeLevel(5.f / 8.f));
+  assert_level_equal(EnvelopeLevel::logscale(63), EnvelopeLevel(6.f / 8.f));
+  assert_level_equal(EnvelopeLevel::logscale(127), EnvelopeLevel(7.f / 8.f));
+
+  assert_level_equal(EnvelopeLevel::logscale(255), EnvelopeLevel(1));
 }
 
 void test_curve_lin_positive(void) {
@@ -268,6 +286,8 @@ extern "C" void app_main(void) {
   RUN_TEST(test_level_comparison);
   RUN_TEST(test_level_arithmetic);
   RUN_TEST(test_level_to_duration);
+  RUN_TEST(test_level_logscale);
+
   RUN_TEST(test_curve_lin_positive);
   RUN_TEST(test_curve_lin_positive2);
   RUN_TEST(test_curve_lin_positive3);

@@ -59,7 +59,7 @@ class Note {
       Envelope(ADSR{0_us, 0_us, EnvelopeLevel(0), 0_us, CurveType::Lin});
   Vibrato _vibrato;
   NotePulse _pulse;
-  EnvelopeLevel _level;
+  EnvelopeLevel _level, _volume;
   Duration _release, _now;
   bool _active = false;
   bool _released = false;
@@ -84,6 +84,7 @@ public:
   bool is_released() const { return _released; }
   const Duration &now() const { return _now; }
   const Hertz &frequency() const { return _freq; }
+  const EnvelopeLevel &max_volume() const { return _volume; }
 };
 
 class Notes {

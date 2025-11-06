@@ -3,13 +3,18 @@
 #include "lfo.hpp"
 #include "notes.hpp"
 #include "synthesizer/helpers/assertions.hpp"
+#include <cstdint>
 #include <unity.h>
 
 Note note;
 // Assume that base note is 100Hz to simplify calculations
 constexpr Config config{.a440 = 100_hz};
-constexpr MidiNote mnote1{69, 127}, mnote2{69 + 12, 127},
-    mnote3{69 + 2 * 12, 127};
+constexpr MidiNote mnote(uint8_t i, uint8_t velocity = 127) {
+  return {static_cast<uint8_t>(69 + i), velocity};
+}
+
+constexpr MidiNote mnote1 = mnote(0), mnote2 = mnote(12),
+                   mnote3 = mnote(2 * 12);
 const Envelope envelope(EnvelopeLevel(1));
 
 void setUp(void) { note.start(mnote1, 100_us, envelope, config); }
@@ -221,6 +226,53 @@ void test_note_envelope2(void) {
   TEST_ASSERT_FALSE(note.next());
 }
 
+void test_note_volume(void) {
+  Envelope envelope(
+      ADSR{200_ms, 200_ms, EnvelopeLevel(0.5), 20_ms, CurveType::Lin});
+
+  auto volume = EnvelopeLevel(7.f / 8);
+  note.start(mnote(0, 63), 0_us, envelope, config);
+  assert_level_equal(note.max_volume(), volume);
+
+  assert_duration_equal(note.current().start, 0_ms);
+  assert_level_equal(note.current().volume, EnvelopeLevel::zero());
+  assert_duration_equal(note.current().period, 10_ms);
+
+  note.next();
+  assert_duration_equal(note.current().start, 10_ms);
+  assert_level_equal(note.current().volume, EnvelopeLevel(0.05f) * volume);
+  assert_duration_equal(note.current().period, 10_ms);
+
+  note.release(500_ms);
+  // Let's fast forward to 400ms (sustain)
+  for (int i = 0; i < 38; i++)
+    TEST_ASSERT_TRUE(note.next());
+
+  // Now we're at 400ms and on sustain
+  assert_duration_equal(note.now(), 400_ms);
+  for (int i = 0; i < 10; i++) {
+    note.next();
+    auto start = 400_ms + 10_ms * i;
+    assert_duration_equal(note.current().start, start);
+    assert_level_equal(note.current().volume, EnvelopeLevel(0.5f) * volume);
+    assert_duration_equal(note.current().period, 10_ms);
+  }
+
+  // Now the release cycle has begun
+  assert_duration_equal(note.now(), 500_ms);
+  TEST_ASSERT_TRUE(note.next());
+  assert_duration_equal(note.current().start, 500_ms);
+  assert_level_equal(note.current().volume, EnvelopeLevel(0.5f) * volume);
+  assert_duration_equal(note.current().period, 10_ms);
+
+  TEST_ASSERT_TRUE(note.next());
+  assert_duration_equal(note.current().start, 510_ms);
+  assert_level_equal(note.current().volume, EnvelopeLevel(0.25f) * volume);
+  assert_duration_equal(note.current().period, 10_ms);
+
+  TEST_ASSERT_FALSE(note.next());
+}
+
 void test_note_envelope_constant(void) {
   for (auto n = 1; n <= 10; n++) {
     EnvelopeLevel volume(0.1 * n);
@@ -277,6 +329,7 @@ extern "C" void app_main(void) {
   RUN_TEST(test_note_release_with_zero_velocity);
   RUN_TEST(test_note_second_start);
   RUN_TEST(test_note_start_after_release);
+  RUN_TEST(test_note_volume);
   RUN_TEST(test_note_envelope);
   RUN_TEST(test_note_envelope2);
   RUN_TEST(test_note_envelope_constant);

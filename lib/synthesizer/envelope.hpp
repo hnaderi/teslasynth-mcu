@@ -2,6 +2,7 @@
 
 #include "core.hpp"
 #include <cmath>
+#include <cstdint>
 #include <optional>
 #include <sstream>
 #include <string>
@@ -21,6 +22,9 @@ public:
 
   constexpr static EnvelopeLevel zero() { return EnvelopeLevel(); }
   constexpr static EnvelopeLevel max() { return EnvelopeLevel(1); }
+  constexpr static EnvelopeLevel logscale(uint8_t value) {
+    return EnvelopeLevel(log2f(1.f + value) / 8.f);
+  }
 
   constexpr bool is_zero() const { return _value == 0; }
   constexpr EnvelopeLevel operator+(const EnvelopeLevel &b) const {
@@ -47,6 +51,9 @@ public:
   float operator-(const EnvelopeLevel &b) const { return _value - b._value; }
 
   constexpr Duration operator*(const Duration &b) const { return b * _value; }
+  constexpr EnvelopeLevel operator*(const EnvelopeLevel &b) const {
+    return EnvelopeLevel(b._value * _value);
+  }
   constexpr bool operator<(const EnvelopeLevel &b) const {
     return _value < b._value;
   }

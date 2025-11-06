@@ -18,6 +18,7 @@ void Note::start(const MidiNote &mnote, Duration time, Envelope env,
   _active = true;
   _released = false;
   _level = _envelope.update(0_us, true);
+  _volume = EnvelopeLevel::logscale(mnote.velocity * 2 + 1);
   _now = time;
   next();
 }
@@ -49,21 +50,19 @@ bool Note::next() {
   if (_active) {
     Duration32 period = (_freq + _vibrato.offset(now())).period();
     _pulse.start = _now;
-    _pulse.volume = _level;
+    _pulse.volume = _level * _volume;
     _pulse.period = period;
 
     Duration next_tick = _now + period;
-    EnvelopeLevel lvl(0);
     if (!_released || next_tick < _release)
-      lvl = _envelope.update(period, true);
+      _level = _envelope.update(period, true);
     else {
       if (_now <= _release) {
         _envelope.update(*(_release - _now), true);
-        lvl = _envelope.update(*(next_tick - _release), false);
+        _level = _envelope.update(*(next_tick - _release), false);
       } else
-        lvl = _envelope.update(period, false);
+        _level = _envelope.update(period, false);
     }
-    _level = lvl;
     _now = next_tick;
   }
   return _active;
