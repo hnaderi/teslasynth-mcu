@@ -4,7 +4,6 @@
 #include <cmath>
 #include <cstdint>
 #include <optional>
-#include <sstream>
 #include <string>
 
 constexpr float epsilon = 0.001;
@@ -107,23 +106,23 @@ struct ADSR {
   }
 
   inline operator std::string() const {
-    std::stringstream stream;
+    std::string stream;
     switch (type) {
     case Lin:
-      stream << "lin";
+      stream = "lin";
       break;
     case Exp:
-      stream << "exp";
+      stream = "exp";
       break;
     case Const:
-      stream << "const";
+      stream = "const";
       break;
     }
 
-    stream << " A: " << std::string(attack) << " D: " << std::string(decay)
-           << " S: " << std::string(sustain) << " R: " << std::string(release);
+    stream += " A: " + std::string(attack) + " D: " + std::string(decay) +
+              " S: " + std::string(sustain) + " R: " + std::string(release);
 
-    return stream.str();
+    return stream;
   }
 };
 

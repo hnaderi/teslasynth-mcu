@@ -2,7 +2,6 @@
 
 #include "envelope.hpp"
 #include "lfo.hpp"
-#include <sstream>
 
 struct Instrument {
   ADSR envelope;
@@ -16,10 +15,9 @@ struct Instrument {
   }
 
   inline operator std::string() const {
-    std::stringstream stream;
-    stream << "envelope " << std::string(envelope) << " vibrato "
-           << std::string(vibrato);
-    return stream.str();
+    std::string stream = "envelope " + std::string(envelope) + " vibrato " +
+                         std::string(vibrato);
+    return stream;
   }
 };
 

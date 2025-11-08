@@ -1,6 +1,5 @@
 #pragma once
 #include <cstdint>
-#include <sstream>
 #include <string>
 
 /// Channel message types (status upper nibble)
@@ -112,11 +111,7 @@ struct MidiStatus {
   static constexpr bool is_status(uint8_t v) { return v & 0x80; }
   static constexpr MidiStatus min() { return 0; }
 
-  inline operator std::string() const {
-    std::stringstream stream;
-    stream << std::hex << value;
-    return stream.str();
-  }
+  inline operator std::string() const { return std::to_string(value); }
 };
 
 struct MidiChannelMessage {
@@ -194,39 +189,35 @@ struct MidiChannelMessage {
   }
 
   inline operator std::string() const {
-    std::stringstream stream;
-    stream << "Channel: " << std::to_string(channel) << " ";
+    std::string res = "Channel: " + std::to_string(channel) + " ";
     switch (type) {
     case MidiMessageType::NoteOn:
-      stream << "Note On " << std::to_string(data0) << ", "
-             << std::to_string(data1);
+      res += "Note On " + std::to_string(data0) + ", " + std::to_string(data1);
       break;
     case MidiMessageType::NoteOff:
-      stream << "Note Off " << std::to_string(data0) << ", "
-             << std::to_string(data1);
+      res += "Note Off " + std::to_string(data0) + ", " + std::to_string(data1);
       break;
     case MidiMessageType::ControlChange:
-      stream << "Control change " << std::to_string(data0) << ", "
-             << std::to_string(data1);
+      res += "Control change " + std::to_string(data0) + ", " +
+             std::to_string(data1);
       break;
     case MidiMessageType::ProgramChange:
-      stream << "Program change " << std::to_string(data0);
+      res += "Program change " + std::to_string(data0);
       break;
     case MidiMessageType::AfterTouchChannel:
-      stream << "After touch " << std::to_string(data0);
+      res += "After touch " + std::to_string(data0);
       break;
     case MidiMessageType::AfterTouchPoly:
-      stream << "After touch poly " << std::to_string(data0) << ", "
-             << std::to_string(data1);
+      res += "After touch poly " + std::to_string(data0) + ", " +
+             std::to_string(data1);
       break;
     case MidiMessageType::PitchBend:
-      stream << "Pitch " << std::to_string(data0) << ", "
-             << std::to_string(data1);
+      res += "Pitch " + std::to_string(data0) + ", " + std::to_string(data1);
       break;
     default:
-      stream << "Unknown type: " << std::to_string(static_cast<uint8_t>(type));
+      res += "Unknown type: " + std::to_string(static_cast<uint8_t>(type));
     }
-    return stream.str();
+    return res;
   }
 
   constexpr bool is_control() const {
