@@ -2,15 +2,15 @@
 
 import json
 from pathlib import Path
+
 Import("env")
 
-board = env.get("BOARD")
-
 home = Path.home()
-board_path = Path.cwd() / ".pio" / "build" / board
+board_name = env.get("BOARD")
+board_path = Path(env.subst("$BUILD_DIR"))
 db_path = str(board_path / "compile_commands.json")
 
-print(f"Generate compile commands for {board}")
+print(f"Generating .clangd files for board: {board_name}")
 
 with open(db_path) as f:
     db = json.load(f)
