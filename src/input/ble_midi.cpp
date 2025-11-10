@@ -46,8 +46,8 @@ protected:
   }
 };
 
-StreamBufferHandle_t ble_begin(const char *deviceName) {
-  BLEDevice::init(deviceName);
+StreamBufferHandle_t ble_begin() {
+  BLEDevice::init(CONFIG_TESLASYNTH_DEVICE_NAME);
 
   sbuf = xStreamBufferCreate(256, 1);
   if (sbuf == NULL) {
@@ -100,7 +100,7 @@ StreamBufferHandle_t ble_begin(const char *deviceName) {
   auto _advertising = _server->getAdvertising();
   _advertising->addServiceUUID(service->getUUID());
   _advertising->setAppearance(0x00);
-  _advertising->setName(deviceName);
+  _advertising->setName(CONFIG_TESLASYNTH_DEVICE_NAME);
   _advertising->start();
 
   return sbuf;
