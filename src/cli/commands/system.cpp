@@ -1,4 +1,5 @@
 #include "argtable3/argtable3.h"
+#include "esp_app_desc.h"
 #include "esp_chip_info.h"
 #include "esp_console.h"
 #include "esp_flash.h"
@@ -13,6 +14,14 @@
 #ifdef CONFIG_FREERTOS_USE_STATS_FORMATTING_FUNCTIONS
 #define WITH_TASKS_INFO 1
 #endif
+
+#define BANNER                                                                 \
+  " _____         _                       _   _     \r\n|_   _|       | |    " \
+  "                 | | | |    \r\n  | | ___  ___| | __ _ ___ _   _ _ __ | "   \
+  "|_| |__  \r\n  | |/ _ \\/ __| |/ _` / __| | | | \'_ \\| __| \'_ \\ \r\n  "  \
+  "| |  __/\\__ \\ | (_| \\__ \\ |_| | | | | |_| | | |\r\n  "                  \
+  "\\_/\\___||___/_|\\__,_|___/\\__, |_| |_|\\__|_| |_|\r\n                  " \
+  "          __/ |                \r\n                           |___/"
 
 static const char *TAG = "cmd_system_common";
 
@@ -77,6 +86,10 @@ static int get_version(int argc, char **argv) {
     printf("Get flash size failed");
     return 1;
   }
+  auto app_version = esp_app_get_description();
+  printf("\n%s\n", BANNER);
+  printf("version:%s\ncompiled at:%s %s\n\n", app_version->version,
+         app_version->date, app_version->time);
   printf("IDF Version:%s\r\n", esp_get_idf_version());
   printf("Chip info:\r\n");
   printf("\tmodel:%s\r\n", model);
@@ -95,7 +108,7 @@ static int get_version(int argc, char **argv) {
 static void register_version(void) {
   const esp_console_cmd_t cmd = {
       .command = "version",
-      .help = "Get version of chip and SDK",
+      .help = "Get versions of firmware, chip and SDK",
       .hint = NULL,
       .func = &get_version,
   };

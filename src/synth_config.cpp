@@ -4,7 +4,6 @@
 #include "esp_log.h"
 #include "notes.hpp"
 #include "nvs.h"
-#include "string"
 #include <cstdint>
 #include <cstring>
 
@@ -38,7 +37,6 @@ Config &load_config() {
     if (nvs_get_u32(handle, "max_on", &u32) == ESP_OK)
       config_.max_on_time = Duration32::micros(u32);
   }
-  ESP_LOGI(TAG, "Config:\n%s\n", std::string(config_).c_str());
   return config_;
 }
 

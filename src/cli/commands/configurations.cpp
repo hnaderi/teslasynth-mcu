@@ -162,7 +162,7 @@ void register_configuration_commands(void) {
   const esp_console_cmd_t cfg_cmd = {
       .command = "config",
       .help = "Configuration commands",
-      .hint = "set <key1>=<val1> [<key2>=<val2> …] | show", // <-- colored hint
+      .hint = "set <key1>=<val1> [<key2>=<val2> …] | show | reset", 
       .func = config_cmd,
   };
   ESP_ERROR_CHECK(esp_console_cmd_register(&cfg_cmd));
