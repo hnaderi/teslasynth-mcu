@@ -149,7 +149,12 @@ static int config_cmd(int argc, char **argv) {
     print_config();
     return 0;
   }
-  printf("Usage: config <set|show>\n");
+  if (argc == 2 && strcmp(argv[1], "reset") == 0) {
+    reset_config();
+    print_config();
+    return 0;
+  }
+  printf("Usage: config <set|show|reset>\n");
   return 0;
 }
 

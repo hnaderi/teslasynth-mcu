@@ -43,6 +43,11 @@ Config &load_config() {
 }
 
 Config &get_config() { return config_; }
+
+void reset_config() {
+  config_ = {};
+  save_config();
+}
 void save_config() {
   nvs_set_u8(handle, "notes", config_.notes);
 
