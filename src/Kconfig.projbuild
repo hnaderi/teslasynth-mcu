@@ -20,4 +20,11 @@ config CONFIG_MAX_NOTES
         You can configure max concurrent notes up to this value.
 endmenu
 
+menu "Display"
+
+config TESLASYNTH_DISPLAY_ENABLED
+    bool "Enable display"
+    default "n"
+endmenu
+
 endmenu

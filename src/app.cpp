@@ -94,7 +94,7 @@ void play(StreamBufferHandle_t sbuf) {
   if (xQueue == NULL)
     return;
   xNotesMutex = xSemaphoreCreateMutex();
-  xTaskCreatePinnedToCore(parser, "Parser", 8 * 1024, sbuf, 1, NULL, 1);
-  xTaskCreatePinnedToCore(synth, "Synth", 8 * 1024, NULL, 1, NULL, 1);
-  xTaskCreatePinnedToCore(render, "Render", 8 * 1024, NULL, 1, NULL, 1);
+  xTaskCreatePinnedToCore(parser, "Parser", 8 * 1024, sbuf, 2, NULL, 1);
+  xTaskCreatePinnedToCore(synth, "Synth", 8 * 1024, NULL, 2, NULL, 1);
+  xTaskCreatePinnedToCore(render, "Render", 8 * 1024, NULL, 2, NULL, 1);
 }

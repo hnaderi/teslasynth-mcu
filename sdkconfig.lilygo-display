@@ -436,6 +436,18 @@ CONFIG_PARTITION_TABLE_MD5=y
 #
 CONFIG_TESLASYNTH_GPIO_PIN=4
 CONFIG_TESLASYNTH_DEVICE_NAME="Teslasynth"
+
+#
+# Synth
+#
+CONFIG_CONFIG_MAX_NOTES=4
+# end of Synth
+
+#
+# Display
+#
+CONFIG_TESLASYNTH_DISPLAY_ENABLED=y
+# end of Display
 # end of Teslasynth
 
 #

@@ -1,5 +1,7 @@
 #include "app.hpp"
 #include "cli.hpp"
+#include "configuration/synth.hpp"
+#include "display.hpp"
 #include "nvs.h"
 #include "nvs_flash.h"
 #include <input/ble_midi.hpp>
@@ -18,7 +20,11 @@ void initialize_nvs() {
 
 extern "C" void app_main(void) {
   initialize_nvs();
+  load_config();
 
+#if CONFIG_TESLASYNTH_DISPLAY_ENABLED
+  setup_display();
+#endif
   init_cli();
   auto sbuf = ble_begin();
   play(sbuf);
