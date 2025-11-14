@@ -4,12 +4,11 @@
 #include "lfo.hpp"
 #include "midi_synth.hpp"
 #include "synthesizer/helpers/assertions.hpp"
-#include <cstddef>
 #include <cstdint>
 #include <unity.h>
 #include <vector>
 
-constexpr Config config_(size_t notes) {
+constexpr Config config_(uint8_t notes) {
   return {
       .min_deadtime = 100_us,
       .a440 = 100_hz,

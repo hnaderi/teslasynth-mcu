@@ -41,17 +41,16 @@ void parser(void *pvParams) {
   }
 }
 
-void synth(void *pvParams) {
+void synth(void *) {
   SynthChannel ch(config, notes, track);
   MidiChannelMessage msg;
   while (true) {
     BaseType_t status = xQueueReceive(xQueue, &msg, xTicksToWait);
 
-    // TODO duration overflows now
     Duration now = Duration::micros(esp_timer_get_time());
 
     if (status) {
-      ESP_LOGI(TAG, "Received: %s at %s", std::string(msg).c_str(),
+      ESP_LOGD(TAG, "Received: %s at %s", std::string(msg).c_str(),
                std::string(now).c_str());
       xSemaphoreTake(xNotesMutex, portMAX_DELAY);
       ch.handle(msg, now);
@@ -60,9 +59,9 @@ void synth(void *pvParams) {
   }
 }
 
-void render(void *pvParams) {
+void render(void *) {
   Sequencer<> seq(config, notes, track);
-  constexpr TickType_t loopTime = pdMS_TO_TICKS(10);
+  constexpr TickType_t loopTime = pdMS_TO_TICKS(5);
   constexpr size_t BUFFER_SIZE = 20;
 
   int64_t processed = esp_timer_get_time();
@@ -90,7 +89,7 @@ void render(void *pvParams) {
 void play(StreamBufferHandle_t sbuf) {
   config = load_config();
   rmt_driver();
-  xQueue = xQueueCreate(8, sizeof(MidiChannelMessage));
+  xQueue = xQueueCreate(20, sizeof(MidiChannelMessage));
   if (xQueue == NULL)
     return;
   xNotesMutex = xSemaphoreCreateMutex();
