@@ -15,7 +15,6 @@
 #include <string>
 
 Config config;
-QueueHandle_t xQueue;
 const TickType_t xTicksToWait = pdMS_TO_TICKS(10);
 Notes notes;
 TrackState track;
@@ -23,27 +22,10 @@ SemaphoreHandle_t xNotesMutex;
 
 static const char *TAG = "APP";
 
-void cbk(const MidiChannelMessage &msg) {
-  if (xQueueSendToBack(xQueue, &msg, xTicksToWait) != pdPASS) {
-    ESP_LOGE(TAG, "Couldn't enqueue channel message!");
-  }
-}
-
-void parser(void *pvParams) {
-  StreamBufferHandle_t sbuf = static_cast<StreamBufferHandle_t>(pvParams);
-  MidiParser parser(cbk);
-  uint8_t buffer[64];
-  size_t read = 0;
-
-  while (true) {
-    read = xStreamBufferReceive(sbuf, buffer, sizeof(buffer), xTicksToWait);
-    parser.feed(buffer, read);
-  }
-}
-
-void synth(void *) {
   SynthChannel ch(config, notes, track);
+void synth(void *pvParams) {
   MidiChannelMessage msg;
+  QueueHandle_t xQueue = static_cast<QueueHandle_t>(pvParams);
   while (true) {
     BaseType_t status = xQueueReceive(xQueue, &msg, xTicksToWait);
 
@@ -86,14 +68,11 @@ void render(void *) {
   }
 }
 
-void play(StreamBufferHandle_t sbuf) {
+void play(QueueHandle_t channelMessages) {
   config = load_config();
   rmt_driver();
-  xQueue = xQueueCreate(20, sizeof(MidiChannelMessage));
-  if (xQueue == NULL)
-    return;
   xNotesMutex = xSemaphoreCreateMutex();
-  xTaskCreatePinnedToCore(parser, "Parser", 8 * 1024, sbuf, 2, NULL, 1);
-  xTaskCreatePinnedToCore(synth, "Synth", 8 * 1024, NULL, 2, NULL, 1);
+  xTaskCreatePinnedToCore(synth, "Synth", 8 * 1024, channelMessages, 2, NULL,
+                          1);
   xTaskCreatePinnedToCore(render, "Render", 8 * 1024, NULL, 2, NULL, 1);
 }

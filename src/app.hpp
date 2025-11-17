@@ -2,4 +2,4 @@
 
 #include "freertos/FreeRTOS.h"
 
-void play(StreamBufferHandle_t sbuf);
+void play(QueueHandle_t sbuf);

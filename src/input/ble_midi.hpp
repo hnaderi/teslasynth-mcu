@@ -2,4 +2,4 @@
 
 #include "freertos/FreeRTOS.h"
 
-StreamBufferHandle_t ble_begin();
+QueueHandle_t ble_begin();
