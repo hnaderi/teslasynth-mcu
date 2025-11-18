@@ -2,9 +2,11 @@
 #include "core.hpp"
 #include "esp_console.h"
 #include "freertos/task.h"
+#include "instruments.hpp"
 #include "notes.hpp"
 #include <cstdint>
 #include <cstdlib>
+#include <optional>
 #include <stdio.h>
 #include <string.h>
 
@@ -14,6 +16,7 @@ static constexpr const char *max_on_time = "max-on-time";
 static constexpr const char *min_deadtime = "min-deadtime";
 static constexpr const char *tuning = "tuning";
 static constexpr const char *notes = "notes";
+static constexpr const char *instrument = "instrument";
 }; // namespace keys
 
 static bool parse_duration(const char *s, Duration32 *out) {
@@ -64,6 +67,24 @@ static bool parse_notes(const char *s, uint8_t *out) {
   return false;
 }
 
+static bool parse_instrument(const char *s, std::optional<uint8_t> *out) {
+  char *end;
+  long val = strtol(s, &end, 0);
+  size_t len = strlen(s);
+  if (end == s && len > 0) {
+    return false;
+  }
+
+  if (val < 0 || len == 0) {
+    *out = {};
+    return true;
+  } else if (*end == '\0' && static_cast<size_t>(val) < instruments_size) {
+    *out = val;
+    return true;
+  }
+  return false;
+}
+
 inline int invalid_duration(const char *value) {
   printf("Invalid duration value %s, valid values unsigned integer values "
          "followed by an optional time unit [us (default), ms, s]",
@@ -79,9 +100,20 @@ inline int invalid_frequency(const char *value) {
   return 1;
 }
 
+inline int invalid_instrument(const char *value) {
+  printf("Invalid instrument value %s\n"
+         "Valid values are optional integer numbers, negative values are "
+         "considered as no value",
+         value);
+  return 1;
+}
+
 void register_configuration_commands(void);
 
 #define cstr(value) std::string(value).c_str()
+#define instrument_value(config)                                               \
+  (config.instrument.has_value() ? std::to_string(*config.instrument).c_str()  \
+                                 : "")
 
 static int print_config() {
   const Config &config = get_config();
@@ -90,10 +122,12 @@ static int print_config() {
          "\t%s = %s\n"
          "\t%s = %s\n"
          "\t%s = %s\n"
-         "\t%s = %s\n",
+         "\t%s = %s\n"
+         "\t%s = <%s>\n",
          keys::notes, config.notes, keys::min_on_time, cstr(config.min_on_time),
          keys::max_on_time, cstr(config.max_on_time), keys::min_deadtime,
-         cstr(config.min_deadtime), keys::tuning, cstr(config.a440));
+         cstr(config.min_deadtime), keys::tuning, cstr(config.a440),
+         keys::instrument, instrument_value(config));
   return 0;
 }
 
@@ -128,6 +162,10 @@ static int set_config(int argc, char **argv) {
         printf("Invalid notes value %s, must be a number in [1, %i]", value,
                Config::max_notes);
         return 1;
+      }
+    } else if (strcmp(key, keys::instrument) == 0) {
+      if (!parse_instrument(value, &config.instrument)) {
+        return invalid_instrument(value);
       }
     } else {
       printf("Unknown config: %s", key);

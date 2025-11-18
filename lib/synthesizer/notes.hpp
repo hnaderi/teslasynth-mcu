@@ -7,6 +7,8 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <optional>
+#include <string>
 
 #ifndef CONFIG_MAX_NOTES
 #define CONFIG_MAX_NOTES 4
@@ -19,13 +21,15 @@ struct Config {
              min_deadtime = 100_us;
   Hertz a440 = 440_hz;
   uint8_t notes = max_notes;
+  std::optional<uint8_t> instrument = {};
 
   inline operator std::string() const {
     return std::string("Concurrent notes: ") + std::to_string(notes) +
            "\nTuning: " + std::string(a440) +
            "\nMin on time: " + std::string(min_on_time) +
            "\nMax on time: " + std::string(max_on_time) +
-           "\nMin deadtime: " + std::string(min_deadtime);
+           "\nMin deadtime: " + std::string(min_deadtime) +
+           "\nInstrument: " + (instrument ? std::to_string(*instrument) : "-");
   }
 };
 

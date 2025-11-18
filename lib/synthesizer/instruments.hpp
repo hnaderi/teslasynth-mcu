@@ -29,7 +29,8 @@ const static Instrument instruments[] = {
      .vibrato = {2_hz, 1_hz}},
     {.envelope = {5_ms, 10_ms, EnvelopeLevel(0.60), 15_ms, CurveType::Lin},
      .vibrato = {3_hz, 2_hz}},
-    {.envelope = {15_ms, 5_ms, EnvelopeLevel(1), 10_ms, CurveType::Const}, // good
+    {.envelope = {15_ms, 5_ms, EnvelopeLevel(1), 10_ms,
+                  CurveType::Const}, // good
      .vibrato = {4_hz, 2_hz}},
     {.envelope = {10_ms, 10_ms, EnvelopeLevel(1), 10_ms, CurveType::Const},
      .vibrato = {5_hz, 1_hz}},
@@ -72,5 +73,6 @@ const static Instrument instruments[] = {
     // end pad
 
 };
+constexpr size_t instruments_size = sizeof(instruments) / sizeof(Instrument);
 
 const inline Instrument &default_instrument() { return instruments[0]; }

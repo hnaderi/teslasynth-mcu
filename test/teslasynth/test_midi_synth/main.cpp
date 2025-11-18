@@ -131,6 +131,29 @@ void test_should_handle_instrument_change(void) {
   }
 }
 
+void test_should_ignore_instrument_change_when_config_has_instrument(void) {
+  constexpr auto N = 10;
+  FakeNotes notes;
+  Instrument instruments[N];
+  for (auto i = 0; i < N; i++) {
+    instruments[i] = instrument(i);
+  }
+
+  TrackState track;
+  Config config{.instrument = 2};
+  SynthChannel channel(config, notes, track, instruments, N);
+
+  for (auto i = 0; i < N; i++) {
+    channel.handle(MidiChannelMessage::program_change(0, i), 10_ms);
+    TEST_ASSERT_EQUAL(2, channel.instrument_number());
+    channel.handle(MidiChannelMessage::note_on(0, 69 + i, 10 * i), 0_ms);
+
+    TEST_ASSERT_TRUE(track.is_playing());
+    TEST_ASSERT_EQUAL(i + 1, notes.started().size());
+    assert_instrument_equal(notes.started().back().instrument, instrument(2));
+  }
+}
+
 void test_should_turnoff_when_needed(void) {
   const std::vector<ControlChange> cc_event_types{
       ControlChange::ALL_SOUND_OFF,
@@ -182,6 +205,7 @@ extern "C" void app_main(void) {
   RUN_TEST(test_should_handle_note_off);
   RUN_TEST(test_should_ignore_note_off_when_not_playing);
   RUN_TEST(test_should_handle_instrument_change);
+  RUN_TEST(test_should_ignore_instrument_change_when_config_has_instrument);
   RUN_TEST(test_should_turnoff_when_needed);
   RUN_TEST(test_should_start_playing_the_first_note_on_message);
   RUN_TEST(test_should_ignore_off_messages_when_not_playing);

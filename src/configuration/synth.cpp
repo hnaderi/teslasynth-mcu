@@ -6,8 +6,18 @@
 #include "nvs.h"
 #include <cstdint>
 #include <cstring>
+#include <optional>
 
 static const char *TAG = "synth_config";
+
+namespace keys {
+static constexpr const char *min_on_time = "min-on";
+static constexpr const char *max_on_time = "max-on";
+static constexpr const char *min_deadtime = "min-dead";
+static constexpr const char *tuning = "tuning";
+static constexpr const char *notes = "notes";
+static constexpr const char *instrument = "instrument";
+}; // namespace keys
 
 nvs_handle_t handle;
 static Config config_;
@@ -26,22 +36,26 @@ bool init_nvs_handle() {
 
 Config &load_config() {
   if (init_nvs_handle()) {
-    uint8_t u8;
+    int8_t i8;
     uint32_t u32;
 
-    if (nvs_get_u8(handle, "notes", &u8) == ESP_OK)
-      config_.notes = u8;
+    if (nvs_get_i8(handle, keys::notes, &i8) == ESP_OK)
+      config_.notes = i8;
 
-    if (nvs_get_u32(handle, "a440", &u32) == ESP_OK)
+    if (nvs_get_i8(handle, keys::instrument, &i8) == ESP_OK)
+      config_.instrument =
+          i8 > 0 ? std::optional<uint8_t>(i8) : std::optional<uint8_t>();
+
+    if (nvs_get_u32(handle, keys::tuning, &u32) == ESP_OK)
       config_.a440 = Hertz(u32);
 
-    if (nvs_get_u32(handle, "min_on", &u32) == ESP_OK)
+    if (nvs_get_u32(handle, keys::min_on_time, &u32) == ESP_OK)
       config_.min_on_time = Duration32::micros(u32);
 
-    if (nvs_get_u32(handle, "min_dead", &u32) == ESP_OK)
+    if (nvs_get_u32(handle, keys::min_deadtime, &u32) == ESP_OK)
       config_.min_deadtime = Duration32::micros(u32);
 
-    if (nvs_get_u32(handle, "max_on", &u32) == ESP_OK)
+    if (nvs_get_u32(handle, keys::max_on_time, &u32) == ESP_OK)
       config_.max_on_time = Duration32::micros(u32);
   }
   return config_;
@@ -54,12 +68,17 @@ void reset_config() {
   save_config();
 }
 void save_config() {
-  nvs_set_u8(handle, "notes", config_.notes);
+  nvs_set_u8(handle, keys::notes, config_.notes);
+  if (config_.instrument) {
+    nvs_set_u8(handle, keys::instrument, *config_.instrument);
+  } else {
+    nvs_set_u8(handle, keys::instrument, -1);
+  }
 
-  nvs_set_u32(handle, "a440", config_.a440);
-  nvs_set_u32(handle, "min_on", config_.min_on_time.micros());
-  nvs_set_u32(handle, "min_dead", config_.min_deadtime.micros());
-  nvs_set_u32(handle, "max_on", config_.max_on_time.micros());
+  nvs_set_u32(handle, keys::tuning, config_.a440);
+  nvs_set_u32(handle, keys::min_on_time, config_.min_on_time.micros());
+  nvs_set_u32(handle, keys::max_on_time, config_.max_on_time.micros());
+  nvs_set_u32(handle, keys::min_deadtime, config_.min_deadtime.micros());
 
   esp_err_t err = nvs_commit(handle);
   if (err != ESP_OK) {

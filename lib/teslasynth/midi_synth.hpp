@@ -3,6 +3,7 @@
 #include "../midi/midi_core.hpp"
 #include "../synthesizer/notes.hpp"
 #include "core.hpp"
+#include <algorithm>
 #include <cstdint>
 
 class TrackState {
@@ -111,12 +112,19 @@ public:
     }
   }
 
-  inline void change_instrument(uint8_t n) { _instrument = n; }
-  constexpr uint8_t instrument_number() const { return _instrument; }
+  inline void change_instrument(uint8_t n) {
+    _instrument = std::min<uint8_t>(_instruments_size, std::max<uint8_t>(0, n));
+  }
+
+  inline constexpr uint8_t instrument_number() const {
+    return _config.instrument.value_or(_instrument);
+  }
 
   inline const Instrument &instrument() const {
-    return _instrument < _instruments_size ? _instruments[_instrument]
-                                           : default_instrument();
+    if (_instruments != nullptr)
+      return _instruments[instrument_number()];
+    else
+      return default_instrument();
   }
 };
 
