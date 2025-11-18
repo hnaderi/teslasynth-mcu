@@ -12,13 +12,20 @@ static const char *TAG = "synth_config";
 nvs_handle_t handle;
 static Config config_;
 
-Config &load_config() {
-  // Open NVS handle
+bool init_nvs_handle() {
+  if (handle)
+    return true;
   ESP_LOGI(TAG, "Opening Non-Volatile Storage (NVS) handle...");
   esp_err_t err = nvs_open("synth", NVS_READWRITE, &handle);
   if (err != ESP_OK) {
     ESP_LOGE(TAG, "Error (%s) opening NVS handle!", esp_err_to_name(err));
-  } else {
+    return false;
+  }
+  return true;
+}
+
+Config &load_config() {
+  if (init_nvs_handle()) {
     uint8_t u8;
     uint32_t u32;
 
