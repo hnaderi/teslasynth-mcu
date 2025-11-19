@@ -24,7 +24,7 @@ static const char *TAG = "SYNTH";
 
 void synth(void *pvParams) {
   MidiChannelMessage msg;
-  SynthChannel ch(get_config(), notes, track, instruments, 20);
+  SynthChannel ch(get_config(), notes, track, instruments, instruments_size);
   MidiParser parser([&](const MidiChannelMessage msg) {
     auto now = Duration::micros(esp_timer_get_time());
     ESP_LOGD(TAG, "Received: %s at %s", std::string(msg).c_str(),

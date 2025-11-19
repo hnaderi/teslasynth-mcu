@@ -86,14 +86,15 @@ static bool parse_instrument(const char *s, std::optional<uint8_t> *out) {
 }
 
 inline int invalid_duration(const char *value) {
-  printf("Invalid duration value %s, valid values unsigned integer values "
+  printf("Invalid duration value: %s\n"
+         "Valid values unsigned integer values "
          "followed by an optional time unit [us (default), ms, s]",
          value);
   return 1;
 }
 
 inline int invalid_frequency(const char *value) {
-  printf("Invalid frequency value %s\n"
+  printf("Invalid frequency value: %s\n"
          "Valid values are floating point numbers followed by an optional unit "
          "[Hz]",
          value);
@@ -101,10 +102,10 @@ inline int invalid_frequency(const char *value) {
 }
 
 inline int invalid_instrument(const char *value) {
-  printf("Invalid instrument value %s\n"
+  printf("Invalid instrument value: %s\n"
          "Valid values are optional integer numbers, negative values are "
-         "considered as no value",
-         value);
+         "considered as no value. Max allowed value is %du",
+         value, instruments_size);
   return 1;
 }
 
