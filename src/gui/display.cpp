@@ -2,9 +2,11 @@
 #include "configuration/synth.hpp"
 #include "core/lv_obj.h"
 #include "esp_err.h"
+#include "esp_event_base.h"
 #include "esp_log.h"
 #include "esp_lvgl_port.h"
 #include "freertos/task.h"
+#include "input/ble_midi.hpp"
 #include "media/128x64.h"
 #include "misc/lv_area.h"
 #include "notes.hpp"
@@ -41,6 +43,32 @@ void splash_load_cb(lv_event_t *e) {
   lv_screen_load_anim(main_screen, LV_SCR_LOAD_ANIM_FADE_ON, 500, 3000, false);
 }
 
+lv_obj_t *bluetooth_indicator;
+static lv_timer_t *blink_timer;
+
+static void blink_cb(lv_timer_t *t) {
+  lv_obj_t *icon = static_cast<lv_obj_t *>(lv_timer_get_user_data(t));
+
+  if (lv_obj_has_flag(icon, LV_OBJ_FLAG_HIDDEN))
+    lv_obj_clear_flag(icon, LV_OBJ_FLAG_HIDDEN);
+  else
+    lv_obj_add_flag(icon, LV_OBJ_FLAG_HIDDEN);
+}
+static void ui_on_connected(void) {
+  lv_timer_pause(blink_timer);
+  lv_obj_clear_flag(bluetooth_indicator, LV_OBJ_FLAG_HIDDEN);
+}
+static void ui_on_disconnected(void) { lv_timer_resume(blink_timer); }
+
+static void ble_event_handler(void *handler_args, esp_event_base_t base,
+                              int32_t id, void *event_data) {
+  if (id == BLE_DEVICE_CONNECTED) {
+    lv_async_call((lv_async_cb_t)ui_on_connected, NULL);
+  } else if (id == BLE_DEVICE_DISCONNECTED) {
+    lv_async_call((lv_async_cb_t)ui_on_disconnected, NULL);
+  }
+}
+
 void init_splash_screen() {
   ESP_LOGI(TAG, "splash screen");
   splash_screen = lv_obj_create(nullptr);
@@ -53,9 +81,9 @@ void init_main_screen() {
   ESP_LOGI(TAG, "main screen");
   main_screen = lv_obj_create(nullptr);
 
-  lv_obj_t *icon = lv_image_create(main_screen);
-  lv_image_set_src(icon, &bluetooth_icon);
-  lv_obj_align(icon, LV_ALIGN_TOP_LEFT, 0, 0);
+  bluetooth_indicator = lv_image_create(main_screen);
+  lv_image_set_src(bluetooth_indicator, &bluetooth_icon);
+  lv_obj_align(bluetooth_indicator, LV_ALIGN_TOP_LEFT, 0, 0);
 
   lv_obj_t *label = lv_label_create(main_screen);
   lv_label_set_long_mode(label, LV_LABEL_LONG_SCROLL_CIRCULAR);
@@ -63,6 +91,7 @@ void init_main_screen() {
   lv_obj_set_width(label, lv_display_get_horizontal_resolution(display));
   lv_obj_align(label, LV_ALIGN_TOP_RIGHT, 20, 0);
 
+  blink_timer = lv_timer_create(blink_cb, 750, bluetooth_indicator);
   render_config(main_screen);
 }
 
@@ -83,5 +112,10 @@ void setup_ui() {
     // Release the mutex
     lvgl_port_unlock();
   }
-  // xTaskCreate(start_ui, "UI", 8 * 1024, nullptr, 0, nullptr);
+  ESP_ERROR_CHECK(
+      esp_event_handler_instance_register(EVENT_BLE_BASE, BLE_DEVICE_CONNECTED,
+                                          ble_event_handler, nullptr, nullptr));
+  ESP_ERROR_CHECK(esp_event_handler_instance_register(
+      EVENT_BLE_BASE, BLE_DEVICE_DISCONNECTED, ble_event_handler, nullptr,
+      nullptr));
 }
