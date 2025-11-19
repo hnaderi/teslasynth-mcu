@@ -1,8 +1,7 @@
-#include "display.hpp"
 #include "configuration/synth.hpp"
 #include "core/lv_obj.h"
 #include "esp_err.h"
-#include "esp_event_base.h"
+#include "esp_event.h"
 #include "esp_log.h"
 #include "esp_lvgl_port.h"
 #include "freertos/task.h"
@@ -15,7 +14,7 @@
 #include <sys/param.h>
 #include <unistd.h>
 
-static const char *TAG = "display";
+static const char *TAG = "GUI";
 
 static lv_display_t *display;
 extern lv_display_t *install_display();
@@ -95,7 +94,7 @@ void init_main_screen() {
   render_config(main_screen);
 }
 
-void setup_ui() {
+void init_gui() {
   init_ui();
   display = install_display();
   ESP_LOGI(TAG, "starting the UI");

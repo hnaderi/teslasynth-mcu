@@ -1,5 +1,5 @@
 #include "ble_midi.hpp"
-#include "esp_event_base.h"
+#include "esp_event.h"
 #include "esp_log.h"
 #include "freertos/idf_additions.h"
 #include <NimBLEDevice.h>
@@ -52,7 +52,7 @@ protected:
   }
 };
 
-StreamBufferHandle_t ble_begin() {
+StreamBufferHandle_t init_ble_midi() {
   BLEDevice::init(CONFIG_TESLASYNTH_DEVICE_NAME);
 
   sbuf = xStreamBufferCreate(256, 1);

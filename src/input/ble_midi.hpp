@@ -1,9 +1,6 @@
 #pragma once
 
-#include "esp_event.h"
-#include "freertos/FreeRTOS.h"
-
-StreamBufferHandle_t ble_begin();
+#include "esp_event_base.h"
 
 ESP_EVENT_DECLARE_BASE(EVENT_BLE_BASE);
 enum {

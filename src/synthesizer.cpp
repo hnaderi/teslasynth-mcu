@@ -1,4 +1,3 @@
-#include "app.hpp"
 #include "configuration/synth.hpp"
 #include "core.hpp"
 #include "esp_log.h"
@@ -21,7 +20,7 @@ Notes notes;
 TrackState track;
 SemaphoreHandle_t xNotesMutex;
 
-static const char *TAG = "APP";
+static const char *TAG = "SYNTH";
 
 void synth(void *pvParams) {
   MidiChannelMessage msg;
@@ -71,7 +70,7 @@ void render(void *) {
   }
 }
 
-void play(StreamBufferHandle_t sbuf) {
+void init_synth(StreamBufferHandle_t sbuf) {
   auto config = load_config();
   notes = Notes(config);
   rmt_driver();

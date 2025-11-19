@@ -1,4 +1,3 @@
-#include "cli.hpp"
 #include "commands.h"
 #include "esp_console.h"
 #include <stdio.h>

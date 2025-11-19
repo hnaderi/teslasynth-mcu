@@ -1,11 +1,8 @@
-#include "app.hpp"
-#include "cli.hpp"
+#include "teslasynth.hpp"
 #include "configuration/synth.hpp"
-#include "display.hpp"
 #include "esp_event.h"
 #include "nvs.h"
 #include "nvs_flash.h"
-#include <input/ble_midi.hpp>
 
 void initialize_nvs() {
   esp_err_t err = nvs_flash_init();
@@ -25,11 +22,11 @@ extern "C" void app_main(void) {
   ESP_ERROR_CHECK(esp_event_loop_create_default());
 
 #if CONFIG_TESLASYNTH_GUI_ENABLED
-  setup_ui();
+  init_gui();
 #endif
   init_cli();
-  auto sbuf = ble_begin();
-  play(sbuf);
+  auto sbuf = init_ble_midi();
+  init_synth(sbuf);
   while (1) {
     vTaskDelay(portMAX_DELAY);
   }
