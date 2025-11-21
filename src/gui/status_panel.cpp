@@ -16,6 +16,8 @@
 #include <sys/param.h>
 #include <unistd.h>
 
+#if CONFIG_TESLASYNTH_GUI_STATUS_PANEL
+
 static const char *TAG = "GUI";
 
 static lv_display_t *display;
@@ -158,3 +160,5 @@ void init_gui() {
       EVENT_SYNTHESIZER_BASE, SYNTHESIZER_CONFIG_UPDATED, config_update_handler,
       nullptr, nullptr));
 }
+
+#endif

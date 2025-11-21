@@ -2,8 +2,10 @@ dependencies:
   idf:
     version: ">=5.5.0"
 
-  espressif/esp_lvgl_port: ^2.6.3
   lvgl/lvgl: 9.2.0
+  espressif/esp_lvgl_port: ^2.6.3
+  espressif/esp_lcd_ili9341: ^2.0.1
+  atanisoft/esp_lcd_touch_xpt2046: ^1.0.6
 
   h2zero/esp-nimble-cpp:
     git: https://github.com/h2zero/esp-nimble-cpp.git

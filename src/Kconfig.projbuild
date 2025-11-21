@@ -22,12 +22,27 @@ endmenu
 
 menu "GUI"
 
-config TESLASYNTH_GUI_ENABLED
-    bool "Enable display"
-    default "n"
+choice TESLASYNTH_GUI
+    prompt "GUI type"
+    default TESLASYNTH_GUI_NONE
+    help
+        Select GUI display device
 
-choice TESLASYNTH_DISPLAY_PANEL
-    depends on TESLASYNTH_GUI_ENABLED
+    config TESLASYNTH_GUI_NONE
+        bool "No GUI"
+
+    config TESLASYNTH_GUI_STATUS_PANEL
+        bool "Tiny status panel"
+
+    config TESLASYNTH_GUI_FULL
+        bool "Full GUI"
+endchoice
+
+menu "Status panel"
+depends on TESLASYNTH_GUI_STATUS_PANEL
+
+choice TESLASYNTH_DISPLAY_STATUS_PANEL
+    depends on TESLASYNTH_GUI_STATUS_PANEL
     prompt "GUI display type"
     default TESLASYNTH_DISPLAY_PANEL_SSD1306_128x64
     help
@@ -35,34 +50,169 @@ choice TESLASYNTH_DISPLAY_PANEL
 
     config TESLASYNTH_DISPLAY_PANEL_SSD1306_128x64
         bool "SSD1306 128x64"
-endchoice
 
-choice TESLASYNTH_DISPLAY_INTERFACE
-    depends on TESLASYNTH_GUI_ENABLED
-    prompt "GUI display interface type"
-    default TESLASYNTH_DISPLAY_INTERFACE_I2C
-    help
-        Select GUI display interface
-
-    config TESLASYNTH_DISPLAY_INTERFACE_I2C
-        bool "I2C"
-    config TESLASYNTH_DISPLAY_INTERFACE_SPI
-        bool "SPI"
 endchoice
 
 config TESLASYNTH_DISPLAY_INTERFACE_I2C_SDA
-    depends on TESLASYNTH_DISPLAY_INTERFACE_I2C
     int "SDA Pin"
     default 21
     range 0 39
 
 config TESLASYNTH_DISPLAY_INTERFACE_I2C_SCL
-    depends on TESLASYNTH_DISPLAY_INTERFACE_I2C
     int "SCL Pin"
     default 22
     range 0 39
 
+endmenu
 
+menu "Full GUI"
+depends on TESLASYNTH_GUI_FULL
+
+choice TESLASYNTH_DISPLAY_RESOLUTION
+    prompt "GUI display resolution"
+    default TESLASYNTH_DISPLAY_RESOLUTION_320x240
+    help
+        Select GUI display resolution
+
+    config TESLASYNTH_DISPLAY_RESOLUTION_320x240
+        bool "320 x 240"
+endchoice
+
+menu "Display"
+
+choice TESLASYNTH_DISPLAY_PANEL
+    prompt "GUI display type"
+    default TESLASYNTH_DISPLAY_PANEL_ILI9341
+    help
+        Select GUI display device
+
+    config TESLASYNTH_DISPLAY_PANEL_ILI9341
+        bool "ILI9341"
+
+    config TESLASYNTH_DISPLAY_PANEL_ST7789
+        bool "ST7789"
+endchoice
+
+config TESLASYNTH_DISPLAY_INTERFACE_SPI_CLK
+    int "CLK Pin"
+    default 22
+    range 0 39
+
+config TESLASYNTH_DISPLAY_INTERFACE_SPI_MOSI
+    int "MOSI Pin"
+    default 22
+    range 0 39
+
+config TESLASYNTH_DISPLAY_INTERFACE_SPI_MISO
+    int "MISO Pin"
+    default 22
+    range 0 39
+
+config TESLASYNTH_DISPLAY_INTERFACE_SPI_CS
+    int "CS Pin"
+    default 22
+    range 0 39
+    
+config TESLASYNTH_DISPLAY_INTERFACE_SPI_DC
+    int "DC Pin"
+    default 22
+    range 0 39
+
+config TESLASYNTH_DISPLAY_INTERFACE_SPI_RS
+    int "RS Pin"
+    default -1
+    help
+      Reset pin, set to -1 if not used
+    range -1 39
+
+config TESLASYNTH_DISPLAY_BACKLIGHT_PIN
+    int "Backlight Pin"
+    default 2
+    range 0 39
+
+choice TESLASYNTH_DISPLAY_BACKLIGHT_LEVEL
+    prompt "Backlight logic"
+    default TESLASYNTH_DISPLAY_BACKLIGHT_ACTIVE_HIGH
+
+config TESLASYNTH_DISPLAY_BACKLIGHT_ACTIVE_HIGH
+    bool "Active High"
+
+config TESLASYNTH_DISPLAY_BACKLIGHT_ACTIVE_LOW
+    bool "Active Low"
+
+endchoice
+
+endmenu
+
+menu "Touch"
+
+config TESLASYNTH_TOUCH_ENABLED
+    bool "Enable display touch"
+    default "n"
+
+choice TESLASYNTH_TOUCH_PANEL
+    depends on TESLASYNTH_TOUCH_ENABLED
+    prompt "GUI touch panel type"
+    default TESLASYNTH_TOUCH_PANEL_XPT2046
+    help
+        Select GUI display touch panel
+
+    config TESLASYNTH_TOUCH_PANEL_XPT2046
+        bool "XPT2046"
+
+    config TESLASYNTH_TOUCH_PANEL_STMPE610
+        bool "STMPE610"
+endchoice
+
+config TESLASYNTH_TOUCH_INTERFACE_SPI_CLK
+    depends on TESLASYNTH_TOUCH_ENABLED
+    int "CLK Pin"
+    default 22
+    range 0 39
+
+config TESLASYNTH_TOUCH_INTERFACE_SPI_MOSI
+    depends on TESLASYNTH_TOUCH_ENABLED
+    int "MOSI Pin"
+    default 22
+    range 0 39
+
+config TESLASYNTH_TOUCH_INTERFACE_SPI_MISO
+    depends on TESLASYNTH_TOUCH_ENABLED
+    int "MISO Pin"
+    default 22
+    range 0 39
+
+config TESLASYNTH_TOUCH_INTERFACE_SPI_CS
+    depends on TESLASYNTH_TOUCH_ENABLED
+    int "CS Pin"
+    default 22
+    range 0 39
+    
+config TESLASYNTH_TOUCH_INTERFACE_SPI_DC
+    depends on TESLASYNTH_TOUCH_ENABLED
+    int "DC Pin"
+    default -1
+    range -1 39
+
+config TESLASYNTH_TOUCH_INTERFACE_SPI_RS
+    depends on TESLASYNTH_TOUCH_ENABLED
+    int "RS Pin"
+    default -1
+    help
+      Reset pin, set to -1 if not used
+    range -1 39
+
+config TESLASYNTH_TOUCH_INTERFACE_SPI_IRQ
+    depends on TESLASYNTH_TOUCH_ENABLED
+    int "IRQ Pin"
+    default -1
+    help
+      Reset pin, set to -1 if not used
+    range -1 39
+endmenu
+
+endmenu
+    
 endmenu
 
 menu "Log"

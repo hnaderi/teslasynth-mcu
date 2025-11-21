@@ -21,7 +21,7 @@ extern "C" void app_main(void) {
   load_config();
   ESP_ERROR_CHECK(esp_event_loop_create_default());
 
-#if CONFIG_TESLASYNTH_GUI_ENABLED
+#ifndef CONFIG_TESLASYNTH_GUI_NONE
   init_gui();
 #endif
   init_cli();
