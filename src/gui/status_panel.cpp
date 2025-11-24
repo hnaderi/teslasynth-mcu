@@ -6,7 +6,6 @@
 #include "esp_lvgl_port.h"
 #include "freertos/task.h"
 #include "input/ble_midi.hpp"
-#include "media/128x64.h"
 #include "misc/lv_area.h"
 #include "notes.hpp"
 #include "synthesizer_events.hpp"
@@ -22,6 +21,11 @@ static const char *TAG = "GUI";
 
 static lv_display_t *display;
 extern lv_display_t *install_display();
+
+LV_IMG_DECLARE(teslasynth_tiny);
+LV_IMG_DECLARE(play_icon_16px);
+LV_IMG_DECLARE(pause_icon_16px);
+LV_IMG_DECLARE(bluetooth_icon_16px);
 
 lv_obj_t *main_screen, *splash_screen;
 
@@ -68,9 +72,9 @@ static void ui_on_connection_changed(void *event) {
 
 static void ui_on_track_play_changed(void *event) {
   if (static_cast<bool>(event)) {
-    lv_image_set_src(play_indicator, &play_icon);
+    lv_image_set_src(play_indicator, &play_icon_16px);
   } else {
-    lv_image_set_src(play_indicator, &pause_icon);
+    lv_image_set_src(play_indicator, &pause_icon_16px);
   }
 }
 
@@ -79,7 +83,7 @@ void init_splash_screen() {
   splash_screen = lv_obj_create(nullptr);
 
   lv_obj_t *icon = lv_image_create(splash_screen);
-  lv_image_set_src(icon, &logo);
+  lv_image_set_src(icon, &teslasynth_tiny);
   lv_obj_align(icon, LV_ALIGN_TOP_LEFT, 0, 0);
 }
 void init_main_screen() {
@@ -87,11 +91,11 @@ void init_main_screen() {
   main_screen = lv_obj_create(nullptr);
 
   bluetooth_indicator = lv_image_create(main_screen);
-  lv_image_set_src(bluetooth_indicator, &bluetooth_icon);
+  lv_image_set_src(bluetooth_indicator, &bluetooth_icon_16px);
   lv_obj_align(bluetooth_indicator, LV_ALIGN_TOP_LEFT, 0, 0);
 
   play_indicator = lv_image_create(main_screen);
-  lv_image_set_src(play_indicator, &pause_icon);
+  lv_image_set_src(play_indicator, &pause_icon_16px);
   lv_obj_align(play_indicator, LV_ALIGN_TOP_LEFT, 20, 0);
 
   lv_obj_t *tslabel = lv_label_create(main_screen);
