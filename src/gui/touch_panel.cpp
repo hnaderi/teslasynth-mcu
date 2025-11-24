@@ -1,13 +1,11 @@
 
 #include "driver/spi_common.h"
-#include "driver/spi_master.h"
 #include "esp_err.h"
 #include "esp_lcd_io_spi.h"
 #include "esp_lcd_touch.h"
 #include "esp_lcd_types.h"
 #include "esp_log.h"
 #include "esp_lvgl_port_touch.h"
-#include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "hardware.h"
 #include "misc/lv_types.h"
@@ -29,9 +27,6 @@ static const char *TAG = "DISPLAY";
 #endif
 
 #define TOUCH_SPI SPI3_HOST
-
-#define LCD_MIRROR_X (true)
-#define LCD_MIRROR_Y (false)
 #define TOUCH_CLOCK_HZ ESP_LCD_TOUCH_SPI_CLOCK_HZ
 
 namespace gui {
@@ -104,9 +99,9 @@ esp_lcd_touch_handle_t install_panel(esp_lcd_panel_io_handle_t tp_io_handle) {
       .levels = {.reset = 0, .interrupt = 0},
       .flags =
           {
-              .swap_xy = false,
-              .mirror_x = LCD_MIRROR_X,
-              .mirror_y = LCD_MIRROR_Y,
+              .swap_xy = true,
+              .mirror_x = true,
+              .mirror_y = true,
           },
       // .process_coordinates = process_coordinates,
       .interrupt_callback = NULL};
