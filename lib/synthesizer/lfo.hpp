@@ -2,6 +2,9 @@
 
 #include "core.hpp"
 
+namespace teslasynth::synth {
+using namespace teslasynth::core;
+
 struct Vibrato {
   Hertz freq = 0_hz;
   Hertz depth = 0_hz;
@@ -23,3 +26,5 @@ struct Vibrato {
            std::string(depth);
   }
 };
+
+}; // namespace teslasynth::synth

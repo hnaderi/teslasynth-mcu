@@ -14,6 +14,9 @@
 #define CONFIG_MAX_NOTES 4
 #endif
 
+namespace teslasynth::synth {
+using namespace teslasynth::core;
+
 struct Config {
   static constexpr uint8_t max_notes = CONFIG_MAX_NOTES;
 
@@ -125,3 +128,5 @@ public:
   size_t active() const;
   size_t size() const { return _size; }
 };
+
+} // namespace teslasynth::synth

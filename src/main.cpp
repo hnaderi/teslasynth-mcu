@@ -1,18 +1,21 @@
-#include "teslasynth.hpp"
 #include "configuration/synth.hpp"
 #include "esp_event.h"
+#include "teslasynth.hpp"
+
+using namespace teslasynth::app;
 
 extern "C" void app_main(void) {
-  init_storage();
-  load_config();
+  devices::storage::init();
+  configuration::load_config();
   ESP_ERROR_CHECK(esp_event_loop_create_default());
 
 #ifndef CONFIG_TESLASYNTH_GUI_NONE
-  init_gui();
+  gui::init();
 #endif
-  init_cli();
-  auto sbuf = init_ble_midi();
-  init_synth(sbuf);
+  cli::init();
+  devices::rmt::init();
+  auto sbuf = devices::ble_midi::init();
+  synth::init(sbuf);
   while (1) {
     vTaskDelay(portMAX_DELAY);
   }

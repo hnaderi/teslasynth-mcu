@@ -1,9 +1,35 @@
 #pragma once
 
-#include "freertos/FreeRTOS.h"
+#include "freertos/idf_additions.h"
 
-void init_storage();
-StreamBufferHandle_t init_ble_midi();
-void init_synth(StreamBufferHandle_t sbuf);
-void init_gui(void);
-void init_cli(void);
+namespace teslasynth::app {
+
+namespace devices {
+
+namespace storage {
+void init();
+}
+
+namespace rmt {
+void init(void);
+}
+
+namespace ble_midi {
+StreamBufferHandle_t init();
+}
+
+} // namespace devices
+
+namespace synth {
+void init(StreamBufferHandle_t sbuf);
+}
+
+namespace gui {
+void init(void);
+}
+
+namespace cli {
+void init(void);
+}
+
+} // namespace teslasynth::app

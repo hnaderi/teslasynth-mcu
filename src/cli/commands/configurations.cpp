@@ -10,6 +10,10 @@
 #include <stdio.h>
 #include <string.h>
 
+namespace teslasynth::app::cli {
+using namespace synth;
+using namespace app::configuration;
+
 namespace keys {
 static constexpr const char *min_on_time = "min-on-time";
 static constexpr const char *max_on_time = "max-on-time";
@@ -205,3 +209,5 @@ void register_configuration_commands(void) {
   };
   ESP_ERROR_CHECK(esp_console_cmd_register(&cfg_cmd));
 }
+
+} // namespace teslasynth::app::cli

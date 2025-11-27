@@ -16,6 +16,7 @@ static const char *TAG = "BLE_MIDI";
 
 ESP_EVENT_DEFINE_BASE(EVENT_BLE_BASE);
 
+namespace teslasynth::app::devices::ble_midi {
 class MIDIServerCallbacks : public BLEServerCallbacks {
 public:
   MIDIServerCallbacks() {}
@@ -52,7 +53,7 @@ protected:
   }
 };
 
-StreamBufferHandle_t init_ble_midi() {
+StreamBufferHandle_t init() {
   NimBLEDevice::init(CONFIG_TESLASYNTH_DEVICE_NAME);
 
   auto sbuf = xStreamBufferCreate(256, 1);
@@ -85,3 +86,5 @@ StreamBufferHandle_t init_ble_midi() {
 
   return sbuf;
 }
+
+} // namespace teslasynth::app::devices::ble_midi

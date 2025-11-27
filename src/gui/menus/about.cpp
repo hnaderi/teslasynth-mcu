@@ -3,6 +3,8 @@
 #include "gui/components.hpp"
 #include "helpers/sysinfo.h"
 
+namespace teslasynth::app::gui {
+
 static lv_obj_t *create_software_info_section(lv_obj_t *menu) {
   lv_obj_t *sub_software_info_page =
       lv_menu_page_create(menu, "Software info.");
@@ -79,4 +81,6 @@ lv_obj_t *create_about_section(lv_obj_t *menu) {
   lv_menu_set_load_page_event(menu, cont, sub_legal_info_page);
 
   return sub_about_page;
+}
+
 }

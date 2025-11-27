@@ -7,7 +7,7 @@
 
 static const char *TAG = "STORAGE";
 
-void initialize_nvs() {
+static void initialize_nvs() {
   esp_err_t err = nvs_flash_init();
   if (err == ESP_ERR_NVS_NO_FREE_PAGES ||
       err == ESP_ERR_NVS_NEW_VERSION_FOUND) {
@@ -19,7 +19,7 @@ void initialize_nvs() {
   ESP_ERROR_CHECK(err);
 }
 
-void init_filesystem() {
+static void init_filesystem() {
   ESP_LOGI(TAG, "Initializing LittleFS");
 
   esp_vfs_littlefs_conf_t conf = {
@@ -53,7 +53,9 @@ void init_filesystem() {
   }
 }
 
-void init_storage() {
+namespace teslasynth::app::devices::storage {
+void init() {
   initialize_nvs();
   init_filesystem();
 }
+} // namespace teslasynth::app::devices::storage

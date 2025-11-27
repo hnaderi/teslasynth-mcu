@@ -4,6 +4,8 @@
 #include <cstdint>
 #include <unity.h>
 
+using namespace teslasynth::core;
+
 void test_microseconds(void) {
   TEST_ASSERT_FALSE(0_us > 1_us);
   TEST_ASSERT_TRUE(0_us < 1_us);

@@ -7,6 +7,8 @@
 #include <stdint.h>
 #include <string>
 
+namespace teslasynth::core {
+
 template <typename T = uint64_t> class SimpleDuration {
   T _value;
 
@@ -179,3 +181,5 @@ inline constexpr Hertz operator""_khz(long double n) {
 inline constexpr Hertz operator""_mhz(long double n) {
   return Hertz::megahertz(static_cast<float>(n));
 }
+
+} // namespace teslasynth::core

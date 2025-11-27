@@ -7,6 +7,7 @@
 #include "esp_lvgl_port.h"
 #include "font/lv_symbol_def.h"
 #include "freertos/task.h"
+#include "gui/components.hpp"
 #include "input/ble_midi.hpp"
 #include "layouts/flex/lv_flex.h"
 #include "lv_api_map_v8.h"
@@ -20,23 +21,24 @@
 #include <sys/lock.h>
 #include <sys/param.h>
 #include <unistd.h>
-#include "gui/components.hpp"
 
 #if CONFIG_TESLASYNTH_GUI_FULL
 
-static const char *TAG = "GUI";
+LV_IMG_DECLARE(teslasynth_240p_large);
 
-static lv_display_t *display;
+namespace teslasynth::app::gui {
+
 extern lv_display_t *install_display();
 extern esp_err_t lcd_display_brightness_set(int brightness_percent);
 extern esp_err_t lcd_display_backlight_off(void);
 extern esp_err_t lcd_display_backlight_on(void);
-
 #if CONFIG_TESLASYNTH_TOUCH_ENABLED
 extern lv_indev_t *install_touch(lv_display_t *display);
 #endif
 
-LV_IMG_DECLARE(teslasynth_240p_large);
+static const char *TAG = "GUI";
+
+static lv_display_t *display;
 
 static lv_obj_t *main_screen, *splash_screen;
 static lv_obj_t *bluetooth_indicator, *play_indicator;
@@ -209,7 +211,7 @@ static void start_gui() {
   lv_scr_load(splash_screen);
 }
 
-void init_gui() {
+void init() {
   init_ui();
   display = install_display();
 #if CONFIG_TESLASYNTH_TOUCH_ENABLED
@@ -235,8 +237,9 @@ void init_gui() {
       EVENT_SYNTHESIZER_BASE, SYNTHESIZER_STOPPED, track_event_handler, nullptr,
       nullptr));
   // ESP_ERROR_CHECK(esp_event_handler_instance_register(
-  //     EVENT_SYNTHESIZER_BASE, SYNTHESIZER_CONFIG_UPDATED, config_update_handler,
-  //     nullptr, nullptr));
+  //     EVENT_SYNTHESIZER_BASE, SYNTHESIZER_CONFIG_UPDATED,
+  //     config_update_handler, nullptr, nullptr));
 }
 
+} // namespace teslasynth::app::gui
 #endif

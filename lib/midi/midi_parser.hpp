@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <functional>
 
+namespace teslasynth::midi {
 using ChannelMessageCallback = std::function<void(const MidiChannelMessage &)>;
 
 class MidiParser {
@@ -22,3 +23,5 @@ public:
   }
   bool has_status() const { return _has_status; }
 };
+
+} // namespace teslasynth::midi

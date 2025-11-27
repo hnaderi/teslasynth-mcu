@@ -3,6 +3,9 @@
 #include "envelope.hpp"
 #include "lfo.hpp"
 
+namespace teslasynth::synth {
+using namespace teslasynth::core;
+
 struct Instrument {
   ADSR envelope;
   Vibrato vibrato;
@@ -76,3 +79,5 @@ const static Instrument instruments[] = {
 constexpr size_t instruments_size = sizeof(instruments) / sizeof(Instrument);
 
 const inline Instrument &default_instrument() { return instruments[0]; }
+
+}; // namespace teslasynth::synth

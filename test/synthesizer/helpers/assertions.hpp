@@ -6,6 +6,8 @@
 #include <string>
 #include <unity.h>
 
+using namespace teslasynth::synth;
+
 namespace synth {
 namespace assertions {
 template <typename A, typename B> inline std::string __msg_for(A a, B b) {

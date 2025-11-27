@@ -16,8 +16,6 @@
 #include <sys/param.h>
 #include <unistd.h>
 
-static const char *TAG = "DISPLAY";
-
 #if CONFIG_TESLASYNTH_TOUCH_ENABLED
 
 #if CONFIG_TESLASYNTH_TOUCH_PANEL_STMPE610
@@ -29,7 +27,8 @@ static const char *TAG = "DISPLAY";
 #define TOUCH_SPI SPI3_HOST
 #define TOUCH_CLOCK_HZ ESP_LCD_TOUCH_SPI_CLOCK_HZ
 
-namespace gui {
+namespace teslasynth::app::gui {
+static const char *TAG = "DISPLAY";
 namespace touch {
 esp_lcd_panel_io_handle_t install_io() {
   static const int SPI_MAX_TRANSFER_SIZE = 32768;
@@ -117,15 +116,15 @@ esp_lcd_touch_handle_t install_panel(esp_lcd_panel_io_handle_t tp_io_handle) {
   return tp;
 }
 } // namespace touch
-}; // namespace gui
 
 lv_indev_t *install_touch(lv_display_t *display) {
-  auto io_handle = gui::touch::install_io();
-  auto tp = gui::touch::install_panel(io_handle);
+  auto io_handle = touch::install_io();
+  auto tp = touch::install_panel(io_handle);
 
   const lvgl_port_touch_cfg_t touch_cfg = {.disp = display, .handle = tp};
   static lv_indev_t *indev = lvgl_port_add_touch(&touch_cfg);
   return indev;
 }
+} // namespace teslasynth::app::gui
 
 #endif

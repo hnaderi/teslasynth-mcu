@@ -10,7 +10,7 @@
 #include "midi_parser.hpp"
 #include "midi_synth.hpp"
 #include "notes.hpp"
-#include "output/rmt_driver.h"
+#include "output/rmt_driver.hpp"
 #include "portmacro.h"
 #include "synthesizer_events.hpp"
 #include <cstddef>
@@ -20,13 +20,17 @@
 
 ESP_EVENT_DEFINE_BASE(EVENT_SYNTHESIZER_BASE);
 
+namespace teslasynth::app::synth {
+using namespace teslasynth::midisynth;
+using namespace teslasynth::app::configuration;
+
 Notes notes;
 TrackState track;
 SemaphoreHandle_t xNotesMutex;
 
 static const char *TAG = "SYNTH";
 
-void synth(void *pvParams) {
+static void synth(void *pvParams) {
   MidiChannelMessage msg;
   SynthChannel channel(get_config(), notes, track, instruments,
                        instruments_size);
@@ -63,7 +67,7 @@ void synth(void *pvParams) {
   }
 }
 
-void render(void *) {
+static void render(void *) {
   constexpr TickType_t loopTime = pdMS_TO_TICKS(10);
   TickType_t lastTime = xTaskGetTickCount();
   constexpr size_t BUFFER_SIZE = 64;
@@ -84,15 +88,16 @@ void render(void *) {
       processed += buffer[i].length().micros();
     }
     xSemaphoreGive(xNotesMutex);
-    pulse_write(buffer, i);
+    devices::rmt::pulse_write(buffer, i);
   }
 }
 
-void init_synth(StreamBufferHandle_t sbuf) {
+void init(StreamBufferHandle_t sbuf) {
   auto config = load_config();
   notes = Notes(config);
-  rmt_driver();
   xNotesMutex = xSemaphoreCreateMutex();
   xTaskCreatePinnedToCore(synth, "Synth", 8 * 1024, sbuf, 10, NULL, 1);
   xTaskCreatePinnedToCore(render, "Render", 8 * 1024, NULL, 10, NULL, 1);
 }
+
+} // namespace teslasynth::app::synth

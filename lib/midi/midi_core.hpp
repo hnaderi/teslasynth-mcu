@@ -2,6 +2,8 @@
 #include <cstdint>
 #include <string>
 
+namespace teslasynth::midi {
+
 /// Channel message types (status upper nibble)
 enum class MidiMessageType : uint8_t {
   NoteOff = 0x80,
@@ -227,3 +229,5 @@ struct MidiChannelMessage {
     return is_control() && data0 >= 120;
   }
 };
+
+} // namespace teslasynth::midi

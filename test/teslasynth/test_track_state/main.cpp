@@ -3,6 +3,8 @@
 #include "synthesizer/helpers/assertions.hpp"
 #include <unity.h>
 
+using namespace teslasynth::midisynth;
+
 void test_empty(void) {
   TrackState track;
   TEST_ASSERT_FALSE(track.is_playing());

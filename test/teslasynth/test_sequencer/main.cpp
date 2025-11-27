@@ -8,6 +8,8 @@
 #include <unity.h>
 #include <vector>
 
+using namespace teslasynth::midisynth;
+
 constexpr Config config_(uint8_t notes) {
   return {
       .min_deadtime = 100_us,

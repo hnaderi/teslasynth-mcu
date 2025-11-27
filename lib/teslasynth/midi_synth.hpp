@@ -6,6 +6,10 @@
 #include <algorithm>
 #include <cstdint>
 
+namespace teslasynth::midisynth {
+using namespace teslasynth::synth;
+using namespace teslasynth::midi;
+
 class TrackState {
   Duration _started, _received, _played;
   bool _playing = false;
@@ -176,3 +180,5 @@ public:
     return res;
   }
 };
+
+} // namespace teslasynth::midisynth

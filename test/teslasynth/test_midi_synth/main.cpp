@@ -10,6 +10,8 @@
 #include <unity.h>
 #include <vector>
 
+using namespace teslasynth::midisynth;
+
 constexpr Config config;
 constexpr MidiNote mnotef(int i) { return {static_cast<uint8_t>(69 + i), 127}; }
 constexpr Instrument instrument(int i) {

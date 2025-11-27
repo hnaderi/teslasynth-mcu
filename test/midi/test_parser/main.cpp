@@ -7,6 +7,8 @@
 #include <unity.h>
 #include <vector>
 
+using namespace teslasynth::midi;
+
 using Messages = std::vector<MidiChannelMessage>;
 
 template <typename T> inline std::string __msg_for(T a, T b) {

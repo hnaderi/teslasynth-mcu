@@ -3,6 +3,10 @@
 #include <cmath>
 #include <optional>
 
+using namespace teslasynth::core;
+
+namespace teslasynth::synth {
+
 // -log_e(0.001)
 constexpr float logfactor = 6.907755278982137;
 
@@ -48,8 +52,7 @@ EnvelopeLevel Curve::update(Duration delta) {
   } else {
     const auto dt = delta.micros();
     if (_type == Exp)
-      _current +=
-          (_target - _current) * (1 - expf(-(float)dt / _state.tau));
+      _current += (_target - _current) * (1 - expf(-(float)dt / _state.tau));
     else if (_type == Lin)
       _current += _state.slope * dt;
 
@@ -111,3 +114,5 @@ EnvelopeLevel Envelope::update(Duration delta, bool on) {
   auto remained = progress(delta, on);
   return _current.update(remained);
 }
+
+}; // namespace teslasynth::synth

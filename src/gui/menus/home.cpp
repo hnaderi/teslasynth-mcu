@@ -1,12 +1,14 @@
 #include "configuration/synth.hpp"
 #include "lvgl.h"
+#include "notes.hpp"
 
+namespace teslasynth::app::gui {
 static lv_obj_t *label, *label2;
 
 static void render_home_section(void *) {
   if (label == nullptr || label2 == nullptr)
     return;
-  const Config &config = get_config();
+  const auto &config = teslasynth::app::configuration::get_config();
 
   lv_label_set_text_fmt(label, "Max on: %s",
                         std::string(config.max_on_time).c_str());
@@ -37,3 +39,5 @@ lv_obj_t *create_home_section(lv_obj_t *menu) {
 
   return sub_status_page;
 }
+
+} // namespace teslasynth::app::gui

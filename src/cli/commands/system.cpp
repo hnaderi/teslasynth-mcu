@@ -1,8 +1,6 @@
 #include "argtable3/argtable3.h"
 #include "esp_app_desc.h"
-#include "esp_chip_info.h"
 #include "esp_console.h"
-#include "esp_flash.h"
 #include "esp_log.h"
 #include "freertos/task.h"
 #include "helpers/sysinfo.h"
@@ -23,6 +21,8 @@
   "| |  __/\\__ \\ | (_| \\__ \\ |_| | | | | |_| | | |\r\n  "                  \
   "\\_/\\___||___/_|\\__,_|___/\\__, |_| |_|\\__|_| |_|\r\n                  " \
   "          __/ |                \r\n                           |___/"
+
+namespace teslasynth::app::cli {
 
 static const char *TAG = "cmd_system_common";
 
@@ -227,3 +227,5 @@ static void register_log_level(void) {
   };
   ESP_ERROR_CHECK(esp_console_cmd_register(&cmd));
 }
+
+} // namespace teslasynth::app::cli

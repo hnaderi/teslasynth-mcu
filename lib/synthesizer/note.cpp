@@ -8,6 +8,8 @@
 #include <cstddef>
 #include <cstdint>
 
+namespace teslasynth::synth {
+
 void Note::start(const MidiNote &mnote, Duration time, Envelope env,
                  Vibrato vibrato, Hertz tuning) {
   if (_active && mnote.velocity == 0)
@@ -124,3 +126,5 @@ void Notes::off() {
   for (uint8_t i = 0; i < _size; i++)
     _notes[i].off();
 }
+
+} // namespace teslasynth::synth

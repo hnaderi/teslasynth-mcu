@@ -10,7 +10,9 @@
 #include <cstring>
 #include <optional>
 
+namespace teslasynth::app::configuration {
 static const char *TAG = "synth_config";
+using namespace synth;
 
 namespace keys {
 static constexpr const char *min_on_time = "min-on";
@@ -24,7 +26,7 @@ static constexpr const char *instrument = "instrument";
 nvs_handle_t handle;
 static Config config_;
 
-bool init_nvs_handle() {
+static bool init_nvs_handle() {
   if (handle)
     return true;
   ESP_LOGI(TAG, "Opening Non-Volatile Storage (NVS) handle...");
@@ -95,3 +97,5 @@ void save_config() {
              esp_err_to_name(err));
   }
 }
+
+} // namespace teslasynth::app::configuration

@@ -3,6 +3,8 @@
 #include <envelope.hpp>
 #include <unity.h>
 
+using namespace teslasynth::synth;
+
 void test_level_sanity(void) {
   EnvelopeLevel level;
   TEST_ASSERT_TRUE(level.is_zero());

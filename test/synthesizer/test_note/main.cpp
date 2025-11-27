@@ -6,6 +6,8 @@
 #include <cstdint>
 #include <unity.h>
 
+using namespace teslasynth::synth;
+
 Note note;
 // Assume that base note is 100Hz to simplify calculations
 constexpr Config config{.a440 = 100_hz};

@@ -13,8 +13,6 @@
 #include <sys/param.h>
 #include <unistd.h>
 
-static const char *TAG = "DISPLAY";
-
 #if CONFIG_TESLASYNTH_DISPLAY_PANEL_SSD1306_128x64
 
 #define I2C_BUS_PORT 0
@@ -27,6 +25,9 @@ static const char *TAG = "DISPLAY";
 
 #define DISPLAY_WIDTH 128
 #define DISPLAY_HEIGHT 64
+
+namespace teslasynth::app::gui {
+static const char *TAG = "DISPLAY";
 
 esp_lcd_panel_io_handle_t install_io() {
   ESP_LOGI(TAG, "Initialize I2C bus");
@@ -109,4 +110,5 @@ lv_display_t *install_display() {
   return disp_handle;
 }
 
+} // namespace teslasynth::app::gui
 #endif

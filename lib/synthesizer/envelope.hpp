@@ -6,6 +6,9 @@
 #include <optional>
 #include <string>
 
+namespace teslasynth::synth {
+using namespace teslasynth::core;
+
 constexpr float epsilon = 0.001;
 enum CurveType { Lin, Exp, Const };
 
@@ -168,3 +171,5 @@ public:
 private:
   Stage _stage;
 };
+
+} // namespace teslasynth::synth

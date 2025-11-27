@@ -1,4 +1,4 @@
-#include "rmt_driver.h"
+#include "rmt_driver.hpp"
 #include "driver/rmt_encoder.h"
 #include "driver/rmt_tx.h"
 #include "driver/rmt_types.h"
@@ -7,11 +7,15 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "hal/rmt_types.h"
+#include "midi_synth.hpp"
 #include "soc/gpio_num.h"
 #include <algorithm>
 #include <cstdint>
 #include <stddef.h>
 #include <stdio.h>
+
+namespace teslasynth::app::devices::rmt {
+using teslasynth::midisynth::Pulse;
 
 #define RMT_BUZZER_RESOLUTION_HZ 1'000'000
 
@@ -84,7 +88,7 @@ constexpr rmt_tx_channel_config_t tx_chan_config = {
         },
 };
 
-void rmt_driver(void) {
+void init(void) {
   ESP_LOGI(TAG, "Create RMT TX channel");
   ESP_ERROR_CHECK(rmt_new_tx_channel(&tx_chan_config, &audio_chan));
 
@@ -112,3 +116,5 @@ void pulse_write(const Pulse *pulse, size_t len) {
   ESP_ERROR_CHECK_WITHOUT_ABORT(rmt_transmit(audio_chan, encoder, pulse,
                                              len * sizeof(Pulse), &tx_config));
 }
+
+} // namespace teslasynth::devices::rmt

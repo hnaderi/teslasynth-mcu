@@ -1,9 +1,12 @@
-#include "commands.h"
 #include "esp_console.h"
 #include <stdio.h>
 #include <string.h>
 
-void init_cli(void) {
+namespace teslasynth::app::cli {
+extern void register_configuration_commands(void);
+extern void register_system_common(void);
+
+void init(void) {
   esp_console_repl_t *repl = NULL;
   esp_console_repl_config_t repl_config = ESP_CONSOLE_REPL_CONFIG_DEFAULT();
   repl_config.prompt = "teslasynth>";
@@ -20,3 +23,5 @@ void init_cli(void) {
 
   ESP_ERROR_CHECK(esp_console_start_repl(repl));
 }
+
+} // namespace teslasynth::app::cli

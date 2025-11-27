@@ -3,6 +3,8 @@
 #include "synthesizer/helpers/assertions.hpp"
 #include <unity.h>
 
+using namespace teslasynth::synth;
+
 void test_flat(void) {
   Vibrato lfo;
 

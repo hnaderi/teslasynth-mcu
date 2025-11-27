@@ -2,6 +2,8 @@
 #include "midi_parser.hpp"
 #include <cstddef>
 
+namespace teslasynth::midi {
+
 MidiParser::MidiParser(ChannelMessageCallback on_channel_message)
     : _on_channel_message(on_channel_message) {}
 
@@ -47,3 +49,5 @@ void MidiParser::feed(const uint8_t *input, size_t len) {
     }
   }
 }
+
+} // namespace teslasynth::midi

@@ -1,4 +1,3 @@
-#include "driver/gpio.h"
 #include "driver/spi_common.h"
 #include "esp_err.h"
 #include "esp_lcd_io_spi.h"
@@ -25,6 +24,8 @@
 #elif CONFIG_TESLASYNTH_DISPLAY_PANEL_ST7789
 #include "esp_lcd_panel_st7789.h"
 #endif
+
+namespace teslasynth::app::gui {
 
 static const char *TAG = "DISPLAY";
 
@@ -181,4 +182,5 @@ lv_display_t *install_display() {
   return lvgl_port_add_disp(&disp_cfg);
 }
 
+}
 #endif

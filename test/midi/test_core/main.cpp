@@ -3,6 +3,8 @@
 #include <ostream>
 #include <unity.h>
 
+using namespace teslasynth::midi;
+
 void print_sizes_midi(void) {
   std::cout << "MidiByte: " << sizeof(MidiData) << std::endl
             << "MidiChannelMessage: " << sizeof(MidiChannelMessage)

@@ -17,15 +17,16 @@
 
 #if CONFIG_TESLASYNTH_GUI_STATUS_PANEL
 
-static const char *TAG = "GUI";
-
-static lv_display_t *display;
-extern lv_display_t *install_display();
-
 LV_IMG_DECLARE(teslasynth_tiny);
 LV_IMG_DECLARE(play_icon_16px);
 LV_IMG_DECLARE(pause_icon_16px);
 LV_IMG_DECLARE(bluetooth_icon_16px);
+
+namespace teslasynth::app::gui {
+extern lv_display_t *install_display();
+
+static const char *TAG = "GUI";
+static lv_display_t *display;
 
 lv_obj_t *main_screen, *splash_screen;
 
@@ -38,7 +39,7 @@ lv_obj_t *label1, *label2;
 void render_config(void *) {
   if (label1 == nullptr || label2 == nullptr)
     return;
-  const Config &config = get_config();
+  const auto &config = app::configuration::get_config();
 
   lv_label_set_text_fmt(label1, "Max on: %s",
                         std::string(config.max_on_time).c_str());
@@ -130,7 +131,7 @@ static void config_update_handler(void *, esp_event_base_t, int32_t, void *) {
   lv_async_call(render_config, nullptr);
 }
 
-void init_gui() {
+void init() {
   init_ui();
   display = install_display();
   ESP_LOGI(TAG, "starting the UI");
@@ -164,5 +165,7 @@ void init_gui() {
       EVENT_SYNTHESIZER_BASE, SYNTHESIZER_CONFIG_UPDATED, config_update_handler,
       nullptr, nullptr));
 }
+
+} // namespace teslasynth::app::gui
 
 #endif
