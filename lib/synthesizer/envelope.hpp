@@ -83,21 +83,21 @@ public:
 };
 
 struct ADSR {
-  Duration attack = Duration::zero();
-  Duration decay = Duration::zero();
+  Duration32 attack;
+  Duration32 decay;
   EnvelopeLevel sustain = EnvelopeLevel(1);
-  Duration release = Duration::zero();
+  Duration32 release;
   enum CurveType type = CurveType::Const;
 
   constexpr static ADSR constant(EnvelopeLevel level) {
     return {0_us, 0_us, level, 0_us, Const};
   }
-  constexpr static ADSR linear(Duration attack, Duration decay,
-                               EnvelopeLevel sustain, Duration release) {
+  constexpr static ADSR linear(Duration32 attack, Duration32 decay,
+                               EnvelopeLevel sustain, Duration32 release) {
     return {attack, decay, sustain, release, Lin};
   }
-  constexpr static ADSR exponential(Duration attack, Duration decay,
-                                    EnvelopeLevel sustain, Duration release) {
+  constexpr static ADSR exponential(Duration32 attack, Duration32 decay,
+                                    EnvelopeLevel sustain, Duration32 release) {
     return {attack, decay, sustain, release, Exp};
   }
 
@@ -140,34 +140,34 @@ union CurveState {
 class Curve {
   EnvelopeLevel _target;
   CurveType _type;
-  Duration _total;
+  Duration32 _total;
 
-  Duration _elapsed;
+  Duration32 _elapsed;
   EnvelopeLevel _current;
   CurveState _state;
   bool _target_reached = false;
 
 public:
-  Curve(EnvelopeLevel start, EnvelopeLevel target, Duration total,
+  Curve(EnvelopeLevel start, EnvelopeLevel target, Duration32 total,
         CurveType type);
   Curve(EnvelopeLevel constant);
-  EnvelopeLevel update(Duration delta);
+  EnvelopeLevel update(Duration32 delta);
   bool is_target_reached() const { return _target_reached; }
-  std::optional<Duration> will_reach_target(const Duration &dt) const;
+  std::optional<Duration32> will_reach_target(const Duration32 &dt) const;
 };
 
 class Envelope {
   ADSR _configs;
   Curve _current;
 
-  Duration progress(Duration delta, bool on);
+  Duration32 progress(Duration32 delta, bool on);
 
 public:
   enum Stage { Attack, Decay, Sustain, Release, Off };
 
   Envelope(ADSR configs);
   Envelope(EnvelopeLevel level);
-  EnvelopeLevel update(Duration delta, bool on);
+  EnvelopeLevel update(Duration32 delta, bool on);
   Stage stage() const { return _stage; }
   bool is_off() const { return _stage == Off; }
 

@@ -40,7 +40,7 @@ static bool init_nvs_handle() {
 const Config &load_config() {
   if (init_nvs_handle()) {
     int8_t i8;
-    uint32_t u32;
+    uint16_t u16;
 
     if (nvs_get_i8(handle, keys::notes, &i8) == ESP_OK)
       config_.notes = i8;
@@ -52,11 +52,11 @@ const Config &load_config() {
     // if (nvs_get_u32(handle, keys::tuning, &u32) == ESP_OK)
     //   config_.a440 = Hertz(u32);
 
-    if (nvs_get_u32(handle, keys::min_deadtime, &u32) == ESP_OK)
-      config_.min_deadtime = Duration32::micros(u32);
+    if (nvs_get_u16(handle, keys::min_deadtime, &u16) == ESP_OK)
+      config_.min_deadtime = Duration16::micros(u16);
 
-    if (nvs_get_u32(handle, keys::max_on_time, &u32) == ESP_OK)
-      config_.max_on_time = Duration32::micros(u32);
+    if (nvs_get_u16(handle, keys::max_on_time, &u16) == ESP_OK)
+      config_.max_on_time = Duration16::micros(u16);
   }
   return config_;
 }
@@ -83,8 +83,8 @@ void save_config() {
   }
 
   // nvs_set_u32(handle, keys::tuning, config_.a440);
-  nvs_set_u32(handle, keys::max_on_time, config_.max_on_time.micros());
-  nvs_set_u32(handle, keys::min_deadtime, config_.min_deadtime.micros());
+  nvs_set_u16(handle, keys::max_on_time, config_.max_on_time.micros());
+  nvs_set_u16(handle, keys::min_deadtime, config_.min_deadtime.micros());
 
   esp_err_t err = nvs_commit(handle);
   if (err != ESP_OK) {

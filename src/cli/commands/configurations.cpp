@@ -22,22 +22,18 @@ static constexpr const char *notes = "notes";
 static constexpr const char *instrument = "instrument";
 }; // namespace keys
 
-static bool parse_duration(const char *s, Duration32 *out) {
+static bool parse_duration(const char *s, Duration16 *out) {
   char *end;
-  long long val = strtoll(s, &end, 0);
+  auto val = strtoul(s, &end, 0);
   if (end == s)
     return false; // no digits
 
   if (*end == '\0' || strcmp(end, "us") == 0) {
-    *out = Duration32::micros(val);
+    *out = Duration16::micros(val);
     return true;
   }
   if (strcmp(end, "ms") == 0) {
-    *out = Duration32::millis(val);
-    return true;
-  }
-  if (strcmp(end, "s") == 0) {
-    *out = Duration32::seconds(val);
+    *out = Duration16::millis(val);
     return true;
   }
 
@@ -91,7 +87,7 @@ static bool parse_instrument(const char *s, std::optional<uint8_t> *out) {
 inline int invalid_duration(const char *value) {
   printf("Invalid duration value: %s\n"
          "Valid values unsigned integer values "
-         "followed by an optional time unit [us (default), ms, s]\n",
+         "followed by an optional time unit [us (default), ms]\n",
          value);
   return 1;
 }

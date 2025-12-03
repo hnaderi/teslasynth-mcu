@@ -56,8 +56,10 @@ bool Note::next() {
       _level = _envelope.update(period, true);
     else {
       if (_now <= _release) {
-        _envelope.update(*(_release - _now), true);
-        _level = _envelope.update(*(next_tick - _release), false);
+        uint32_t remained = _release.micros() - _now.micros();
+        _envelope.update(Duration32::micros(remained), true);
+        remained = (*(next_tick - _release)).micros();
+        _level = _envelope.update(Duration32::micros(remained), false);
       } else
         _level = _envelope.update(period, false);
     }

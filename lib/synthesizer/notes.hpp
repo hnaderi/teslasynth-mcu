@@ -21,7 +21,7 @@ using namespace teslasynth::core;
 struct Config {
   static constexpr uint8_t max_notes = CONFIG_MAX_NOTES;
 
-  Duration32 max_on_time = 100_us, min_deadtime = 100_us;
+  Duration16 max_on_time = 100_us, min_deadtime = 100_us;
   uint8_t notes = max_notes;
   std::optional<uint8_t> instrument = {};
 

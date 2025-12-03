@@ -10,7 +10,7 @@ namespace teslasynth::synth {
 // -log_e(0.001)
 constexpr float logfactor = 6.907755278982137;
 
-Curve::Curve(EnvelopeLevel start, EnvelopeLevel target, Duration total,
+Curve::Curve(EnvelopeLevel start, EnvelopeLevel target, Duration32 total,
              CurveType type)
     : _target(target), _type(type), _total(total), _current(start) {
   const auto t = total.micros();
@@ -35,14 +35,14 @@ Curve::Curve(EnvelopeLevel constant)
     : _target(constant), _type(Const), _current(constant),
       _target_reached(true) {}
 
-std::optional<Duration> Curve::will_reach_target(const Duration &dt) const {
+std::optional<Duration32> Curve::will_reach_target(const Duration32 &dt) const {
   if (_type != Const)
     return (dt + _elapsed) - _total;
   else
     return dt;
 }
 
-EnvelopeLevel Curve::update(Duration delta) {
+EnvelopeLevel Curve::update(Duration32 delta) {
   if (_target_reached || _type == Const) {
     // noop
   } else if (_elapsed + delta >= _total) {
@@ -71,8 +71,8 @@ Envelope::Envelope(ADSR configs)
 
 Envelope::Envelope(EnvelopeLevel level) : Envelope(ADSR::constant(level)) {}
 
-Duration Envelope::progress(Duration delta, bool on) {
-  Duration remained = delta;
+Duration32 Envelope::progress(Duration32 delta, bool on) {
+  Duration32 remained = delta;
   auto dt = _current.will_reach_target(remained);
   while (dt && (!remained.is_zero() || !on)) {
     switch (_stage) {
@@ -108,7 +108,7 @@ Duration Envelope::progress(Duration delta, bool on) {
   return remained;
 }
 
-EnvelopeLevel Envelope::update(Duration delta, bool on) {
+EnvelopeLevel Envelope::update(Duration32 delta, bool on) {
   if (is_off())
     return EnvelopeLevel(0);
   auto remained = progress(delta, on);
