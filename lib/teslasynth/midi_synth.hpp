@@ -3,6 +3,7 @@
 #include "../midi/midi_core.hpp"
 #include "../synthesizer/notes.hpp"
 #include "core.hpp"
+#include "instruments.hpp"
 #include <algorithm>
 #include <array>
 #include <cassert>
@@ -78,7 +79,7 @@ public:
 };
 
 struct Pulse {
-  Duration32 on, off;
+  Duration16 on, off;
 
   constexpr bool is_zero() const { return on.is_zero(); }
   constexpr Duration32 length() const { return on + off; }
@@ -231,7 +232,7 @@ public:
     note_on(ch, mnote.number, mnote.velocity, time);
   }
 
-  Pulse sample(uint8_t ch, Duration32 max) {
+  Pulse sample(uint8_t ch, Duration16 max) {
     Pulse res;
 
     Note *note = &_voices[ch].next();
@@ -252,7 +253,7 @@ public:
       note->next();
       _track.on_play(ch, res.on + res.off);
     } else if (next_edge <= target && next_edge >= _track.played_time(ch)) {
-      res.off = Duration32::micros(next_edge.micros() -
+      res.off = Duration16::micros(next_edge.micros() -
                                    _track.played_time(ch).micros());
       _track.on_play(ch, res.off);
     }
@@ -260,17 +261,17 @@ public:
   }
 
   template <size_t BUFSIZE>
-  void sample_all(Duration32 max, PulseBuffer<OUTPUTS, BUFSIZE> &output) {
+  void sample_all(Duration16 max, PulseBuffer<OUTPUTS, BUFSIZE> &output) {
     if (!_track.is_playing()) {
       output.clean();
       return;
     }
-    int32_t now = max.micros();
+    int16_t now = max.micros();
     for (uint8_t ch = 0; ch < OUTPUTS; ch++) {
-      int32_t processed = 0;
+      int16_t processed = 0;
       uint8_t i = 0, start = ch * BUFSIZE;
       for (; processed < now && i < BUFSIZE; i++) {
-        auto left = Duration32::micros(now - processed);
+        auto left = Duration16::micros(now - processed);
         output.pulses[start + i] = sample(ch, left);
         processed += output.pulses[start + i].length().micros();
       }

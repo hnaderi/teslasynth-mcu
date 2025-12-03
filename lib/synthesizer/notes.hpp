@@ -146,12 +146,12 @@ public:
   }
 
   Note &next() {
-    auto out = 0;
-    auto min = Duration::max();
+    uint8_t out = 0;
+    Duration min = Duration::max();
     for (uint8_t i = 0; i < _size; i++) {
       if (!_notes[i].is_active())
         continue;
-      auto time = _notes[i].current().start;
+      Duration time = _notes[i].current().start;
       if (time < min) {
         out = i;
         min = time;

@@ -72,21 +72,43 @@ static void render(void *) {
   TickType_t lastTime = xTaskGetTickCount();
 
   int64_t processed = esp_timer_get_time();
-  PulseBuffer<CONFIG_TESLASYNTH_OUTPUT_COUNT, 10> buffer;
+  PulseBuffer<CONFIG_TESLASYNTH_OUTPUT_COUNT, 64> buffer;
 
   while (true) {
     vTaskDelayUntil(&lastTime, loopTime);
 
     xSemaphoreTake(xNotesMutex, portMAX_DELAY);
     auto now = esp_timer_get_time();
-    auto left = Duration32::micros(static_cast<uint32_t>(now - processed));
-    tsynth.sample_all(left, buffer);
+    auto left = now - processed;
+    uint16_t ll = static_cast<uint16_t>(
+        std::min<int64_t>(left, std::numeric_limits<uint16_t>::max()));
+    tsynth.sample_all(Duration16::micros(ll), buffer);
     xSemaphoreGive(xNotesMutex);
 
     for (uint8_t ch = 0; ch < CONFIG_TESLASYNTH_OUTPUT_COUNT; ch++) {
       devices::rmt::pulse_write(&buffer.data(ch), buffer.data_size(ch), ch);
     }
+
+    uint32_t took = esp_timer_get_time() - processed;
     processed = now;
+
+    static size_t counter = 0;
+    static uint32_t min_i, max_i, total = 0;
+    if (counter == 0) {
+      min_i = max_i = took;
+    } else {
+      min_i = std::min(took, min_i);
+      max_i = std::max(took, max_i);
+    }
+    total += took;
+
+#if CONFIG_TESLASYNTH_DEBUG
+    if (counter++ % 100 == 0) {
+      ESP_LOGI(TAG,
+               "Render stats, min: %u, max: %u, total: %u, avg: %u, ctr: %u",
+               min_i, max_i, total, total / counter, counter);
+    }
+#endif
   }
 }
 

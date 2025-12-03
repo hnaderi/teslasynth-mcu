@@ -33,8 +33,8 @@ void test_should_sequence_empty(void) {
   auto &track = tsynth.track();
   assert_duration_equal(track.played_time(0), 0_ms);
   auto time = Duration::zero();
-  for (auto i = 0; i < 100; i++) {
-    auto step = Duration32::millis(i);
+  for (auto i = 0; i < 64; i++) {
+    auto step = Duration16::millis(i);
     auto pulse = tsynth.sample(0, step);
     TEST_ASSERT_TRUE(pulse.is_zero());
     assert_duration_equal(track.played_time(0), Duration::zero());
@@ -51,13 +51,13 @@ void test_should_sequence_empty_when_no_notes_are_playing(void) {
   tsynth.note_on(0, 69, 0, Duration::zero());
   tsynth.note_off(0, 69, Duration::zero());
   while (track.played_time(0) < 1_s) {
-    auto pulse = tsynth.sample(0, 100_ms);
+    auto pulse = tsynth.sample(0, 50_ms);
   }
 
   // Now there is no note playing
   Duration time = track.played_time(0);
   for (auto i = 0; i < 64; i++) {
-    auto step = Duration32::millis(i);
+    auto step = Duration16::millis(i);
     auto pulse = tsynth.sample(0, step);
     assert_duration_equal(track.played_time(0), time + step);
     assert_duration_equal(pulse.on, 0_ms);

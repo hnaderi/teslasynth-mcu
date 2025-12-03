@@ -36,7 +36,7 @@ inline void symbol_for_idx(Pulse const *current, rmt_symbol_word_t *symbol) {
     };
   } else {
     *symbol = {
-        .duration0 = static_cast<uint16_t>(current->on.micros()),
+        .duration0 = current->on.micros(),
         .level0 = 1,
         .duration1 = std::max<uint16_t>(1, current->off.micros()),
         .level1 = 0,
