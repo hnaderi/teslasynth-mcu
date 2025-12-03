@@ -11,7 +11,7 @@ using namespace teslasynth::synth;
 Note note;
 // Assume that base note is 100Hz to simplify calculations
 constexpr Hertz tuning = 100_hz;
-constexpr Config config{};
+const Config config;
 constexpr MidiNote mnote(uint8_t i, uint8_t velocity = 127) {
   return {static_cast<uint8_t>(69 + i), velocity};
 }
@@ -163,12 +163,13 @@ void test_note_envelope(void) {
 
   // Now we're at 400ms and on sustain
   assert_duration_equal(note.now(), 400_ms);
+  Duration32 start = 400_ms;
   for (int i = 0; i < 10; i++) {
     note.next();
-    auto start = 400_ms + 10_ms * i;
     assert_duration_equal(note.current().start, start);
     assert_level_equal(note.current().volume, EnvelopeLevel(0.5f));
     assert_duration_equal(note.current().period, 10_ms);
+    start += 10_ms;
   }
 
   // Now the release cycle has begun
@@ -206,12 +207,13 @@ void test_note_envelope2(void) {
 
   // Now we're at 400ms and on sustain
   assert_duration_equal(note.now(), 400_ms);
+  Duration32 start = 400_ms;
   for (int i = 0; i < 10; i++) {
     note.next();
-    auto start = 400_ms + 10_ms * i;
     assert_duration_equal(note.current().start, start);
     assert_level_equal(note.current().volume, EnvelopeLevel(0.5f));
     assert_duration_equal(note.current().period, 10_ms);
+    start += 10_ms;
   }
 
   // Now the release cycle has begun
@@ -253,12 +255,14 @@ void test_note_volume(void) {
 
   // Now we're at 400ms and on sustain
   assert_duration_equal(note.now(), 400_ms);
+  Duration32 start = 400_ms;
   for (int i = 0; i < 10; i++) {
     note.next();
-    auto start = 400_ms + 10_ms * i;
     assert_duration_equal(note.current().start, start);
     assert_level_equal(note.current().volume, EnvelopeLevel(0.5f) * volume);
     assert_duration_equal(note.current().period, 10_ms);
+
+    start += 10_ms;
   }
 
   // Now the release cycle has begun
@@ -283,12 +287,13 @@ void test_note_envelope_constant(void) {
     note.start(mnote1, 100_ms, envelope, tuning);
     note.release(490_ms + Duration::millis(n));
 
+    Duration32 time = 100_ms;
     for (int i = 0; note.now() < 500_ms; i++) {
-      Duration time = 100_ms + 10_ms * i;
       assert_duration_equal(note.current().start, time);
       assert_level_equal(note.current().volume, volume);
       assert_duration_equal(note.current().period, 10_ms);
       TEST_ASSERT_TRUE(note.next());
+      time += 10_ms;
     }
 
     assert_duration_equal(note.now(), 500_ms);

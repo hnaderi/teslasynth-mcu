@@ -26,7 +26,17 @@ void test_microseconds(void) {
 void test_seconds(void) {
   assert_duration_equal(1_s, 1000_ms);
   assert_duration_equal(1_s, 1000000_us);
-  assert_duration_equal(429_s, 429'000'000_us);
+  assert_duration_equal(1_s, Duration::seconds(1));
+  assert_duration_equal(429_s, 429000000_us);
+}
+
+void test_duration_literals() {
+  assert_duration_equal(1_s, Duration::seconds(1));
+  assert_duration_equal(100_s, Duration::seconds(100));
+  assert_duration_equal(1000_s, Duration::seconds(1000));
+  assert_duration_equal(10000_us, Duration::micros(10000));
+  assert_duration_equal(100000_ms, Duration::millis(100000));
+  assert_duration_equal(1000000000_s, Duration::seconds(1000000000));
 }
 
 void test_duration_constants() {
@@ -63,6 +73,18 @@ void test_duration32_constants() {
                            "Must be less than 64 bit duration max");
 }
 
+void test_duration16_constants() {
+  constexpr Duration16 zero = Duration16::zero();
+  constexpr Duration16 max = Duration16::max();
+
+  assert_duration_equal(zero, Duration16());
+  assert_duration_equal(zero, Duration16::zero());
+
+  TEST_ASSERT_TRUE_MESSAGE(66_ms > max, "Must be less than 66ms");
+  TEST_ASSERT_TRUE_MESSAGE(max > 65_ms, "Must be more than 65ms");
+  TEST_ASSERT_EQUAL(sizeof(uint16_t), sizeof(Duration16));
+}
+
 void test_duration_arithmetics() {
   constexpr Duration zero = Duration::zero();
   constexpr Duration max = Duration::max();
@@ -70,6 +92,8 @@ void test_duration_arithmetics() {
   assert_duration_equal(zero * 1, zero);
   assert_duration_equal(zero + zero, zero);
   assert_duration_equal(max * 0, zero);
+
+  assert_duration_equal(1_us + 100_s, 100_s + 1_us);
 }
 
 void test_duration_minus(void) {
@@ -79,6 +103,7 @@ void test_duration_minus(void) {
 
   a = 1_s - 2_s;
   TEST_ASSERT_FALSE(a);
+  TEST_ASSERT_TRUE(100_s - 1_us);
 }
 
 void test_hertz(void) {
@@ -113,7 +138,9 @@ extern "C" void app_main(void) {
   UNITY_BEGIN();
   RUN_TEST(test_seconds);
   RUN_TEST(test_microseconds);
+  RUN_TEST(test_duration_literals);
   RUN_TEST(test_duration_constants);
+  RUN_TEST(test_duration16_constants);
   RUN_TEST(test_duration32_constants);
   RUN_TEST(test_duration_arithmetics);
   RUN_TEST(test_duration_minus);

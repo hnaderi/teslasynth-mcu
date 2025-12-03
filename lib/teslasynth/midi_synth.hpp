@@ -200,7 +200,7 @@ public:
 
   inline constexpr uint8_t instrument_number(uint8_t ch) const {
     assert(ch < OUTPUTS);
-    return config_.synth().instrument.value_or(current_instrument_[ch]);
+    return config_.synth_config.instrument.value_or(current_instrument_[ch]);
   }
 
   inline const Instrument &instrument(uint8_t ch) const {
@@ -231,7 +231,7 @@ public:
     note_on(ch, mnote.number, mnote.velocity, time);
   }
 
-  Pulse sample(uint8_t ch, Duration max) {
+  Pulse sample(uint8_t ch, Duration32 max) {
     Pulse res;
 
     Note *note = &_voices[ch].next();
@@ -247,29 +247,30 @@ public:
       res.off = max;
       _track.on_play(ch, max);
     } else if (next_edge == _track.played_time(ch)) {
-      res.on = note->current().volume * config_.channel(ch).max_on_time;
-      res.off = config_.channel(ch).min_deadtime;
+      res.on = note->current().volume * config_.channel_configs[ch].max_on_time;
+      res.off = config_.channel_configs[ch].min_deadtime;
       note->next();
       _track.on_play(ch, res.on + res.off);
     } else if (next_edge <= target && next_edge >= _track.played_time(ch)) {
-      res.off = *(next_edge - _track.played_time(ch));
+      res.off = Duration32::micros(next_edge.micros() -
+                                   _track.played_time(ch).micros());
       _track.on_play(ch, res.off);
     }
     return res;
   }
 
   template <size_t BUFSIZE>
-  void sample_all(Duration max, PulseBuffer<OUTPUTS, BUFSIZE> &output) {
+  void sample_all(Duration32 max, PulseBuffer<OUTPUTS, BUFSIZE> &output) {
     if (!_track.is_playing()) {
       output.clean();
       return;
     }
-    int64_t now = max.micros();
+    int32_t now = max.micros();
     for (uint8_t ch = 0; ch < OUTPUTS; ch++) {
-      int64_t processed = 0;
+      int32_t processed = 0;
       uint8_t i = 0, start = ch * BUFSIZE;
       for (; processed < now && i < BUFSIZE; i++) {
-        auto left = Duration::micros(now - processed);
+        auto left = Duration32::micros(now - processed);
         output.pulses[start + i] = sample(ch, left);
         processed += output.pulses[start + i].length().micros();
       }

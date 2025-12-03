@@ -13,9 +13,12 @@
 #include "output/rmt_driver.hpp"
 #include "portmacro.h"
 #include "synthesizer_events.hpp"
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
+#include <limits>
+#include <stddef.h>
 #include <string>
 
 ESP_EVENT_DEFINE_BASE(EVENT_SYNTHESIZER_BASE);
@@ -76,14 +79,14 @@ static void render(void *) {
 
     xSemaphoreTake(xNotesMutex, portMAX_DELAY);
     auto now = esp_timer_get_time();
-    auto left = Duration::micros(now - processed);
+    auto left = Duration32::micros(static_cast<uint32_t>(now - processed));
     tsynth.sample_all(left, buffer);
-    processed = now;
     xSemaphoreGive(xNotesMutex);
 
     for (uint8_t ch = 0; ch < CONFIG_TESLASYNTH_OUTPUT_COUNT; ch++) {
       devices::rmt::pulse_write(&buffer.data(ch), buffer.data_size(ch), ch);
     }
+    processed = now;
   }
 }
 

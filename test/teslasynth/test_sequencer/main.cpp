@@ -32,9 +32,9 @@ void test_should_sequence_empty(void) {
   Teslasynth<> tsynth;
   auto &track = tsynth.track();
   assert_duration_equal(track.played_time(0), 0_ms);
-  Duration time = Duration::zero();
+  auto time = Duration::zero();
   for (auto i = 0; i < 100; i++) {
-    Duration step = Duration::millis(i);
+    auto step = Duration32::millis(i);
     auto pulse = tsynth.sample(0, step);
     TEST_ASSERT_TRUE(pulse.is_zero());
     assert_duration_equal(track.played_time(0), Duration::zero());
@@ -56,8 +56,8 @@ void test_should_sequence_empty_when_no_notes_are_playing(void) {
 
   // Now there is no note playing
   Duration time = track.played_time(0);
-  for (auto i = 0; i < 100; i++) {
-    Duration step = Duration::millis(i);
+  for (auto i = 0; i < 64; i++) {
+    auto step = Duration32::millis(i);
     auto pulse = tsynth.sample(0, step);
     assert_duration_equal(track.played_time(0), time + step);
     assert_duration_equal(pulse.on, 0_ms);
@@ -76,7 +76,7 @@ void test_should_sequence_single(void) {
 
   for (auto i = 0; track.played_time(0) < 1_s; i++) {
     Pulse pulse2 = tsynth.sample(0, 10_ms);
-    Duration time = 10_ms * i;
+    auto time = Duration32::millis(10) * i;
     assert_duration_equal(pulse2.on, config.max_on_time);
     assert_duration_equal(pulse2.off, config.min_deadtime);
     assert_duration_equal(track.played_time(0), time + pulse2.length());

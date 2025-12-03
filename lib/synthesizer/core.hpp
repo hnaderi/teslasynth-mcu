@@ -23,7 +23,11 @@ public:
   template <typename U,
             typename = std::enable_if_t<std::is_convertible<U, T>::value>>
   constexpr SimpleDuration(const SimpleDuration<U> &other)
-      : _value(static_cast<T>(other.micros())) {}
+      : _value(static_cast<T>(other.micros())) {
+    static_assert(sizeof(U) <= sizeof(T),
+                  "Cannot convert SimpleDuration<U> to smaller "
+                  "SimpleDuration<T>: potential overflow");
+  }
 
   static constexpr SimpleDuration micros(T v) { return SimpleDuration(v); }
   static constexpr SimpleDuration millis(T v) {
@@ -44,16 +48,21 @@ public:
     return SimpleDuration(std::numeric_limits<T>::max());
   }
 
-  constexpr SimpleDuration operator+(const SimpleDuration &b) const {
-    return SimpleDuration(_value + b._value);
+  template <typename U>
+  constexpr auto operator+(const SimpleDuration<U> &b) const {
+    using R = std::common_type_t<T, U>;
+    return SimpleDuration<R>::micros(_value + b.micros());
   }
+
+  template <typename U>
   constexpr std::optional<SimpleDuration>
-  operator-(const SimpleDuration &b) const {
-    if (_value >= b._value)
-      return SimpleDuration(_value - b._value);
+  operator-(const SimpleDuration<U> &b) const {
+    if (_value >= b.micros())
+      return SimpleDuration<T>(_value - b.micros());
     else
       return {};
   }
+
   constexpr SimpleDuration operator*(const int b) const {
     return SimpleDuration(_value * b);
   }
@@ -70,23 +79,32 @@ public:
     return *this;
   }
 
-  constexpr bool operator<(const SimpleDuration &b) const {
-    return _value < b._value;
+  template <typename U>
+  constexpr bool operator<(const SimpleDuration<U> &b) const {
+    return _value < b.micros();
   }
-  constexpr bool operator>(const SimpleDuration &b) const {
-    return _value > b._value;
+
+  template <typename U>
+  constexpr bool operator>(const SimpleDuration<U> &b) const {
+    return _value > b.micros();
   }
-  constexpr bool operator==(const SimpleDuration &b) const {
-    return _value == b._value;
+
+  template <typename U>
+  constexpr bool operator==(const SimpleDuration<U> &b) const {
+    return _value == b.micros();
   }
-  constexpr bool operator!=(const SimpleDuration &b) const {
-    return _value != b._value;
+  template <typename U>
+  constexpr bool operator!=(const SimpleDuration<U> &b) const {
+    return _value != b.micros();
   }
-  constexpr bool operator<=(const SimpleDuration &b) const {
-    return _value <= b._value;
+
+  template <typename U>
+  constexpr bool operator<=(const SimpleDuration<U> &b) const {
+    return _value <= b.micros();
   }
-  constexpr bool operator>=(const SimpleDuration &b) const {
-    return _value >= b._value;
+  template <typename U>
+  constexpr bool operator>=(const SimpleDuration<U> &b) const {
+    return _value >= b.micros();
   }
   constexpr bool is_zero() const { return _value == 0; }
 
@@ -102,16 +120,56 @@ public:
 };
 
 typedef SimpleDuration<uint64_t> Duration;
+typedef SimpleDuration<uint64_t> Duration64;
 typedef SimpleDuration<uint32_t> Duration32;
+typedef SimpleDuration<uint16_t> Duration16;
 
-inline constexpr Duration operator""_us(unsigned long long l) {
-  return Duration::micros(static_cast<uint64_t>(l));
+template <unsigned long long V> struct smallest_uint {
+  using type = std::conditional_t<
+      (V <= UINT16_MAX), uint16_t,
+      std::conditional_t<(V <= UINT32_MAX), uint32_t, uint64_t>>;
+};
+
+template <unsigned long long V>
+constexpr SimpleDuration<typename smallest_uint<V>::type> make_duration() {
+  using T = typename smallest_uint<V>::type;
+  return SimpleDuration<T>::micros(V);
 }
-inline constexpr Duration operator""_ms(unsigned long long l) {
-  return Duration::millis(static_cast<uint64_t>(l));
+
+constexpr unsigned long long pow10(unsigned n) {
+  unsigned long long r = 1;
+  for (unsigned i = 0; i < n; ++i)
+    r *= 10;
+  return r;
 }
-inline constexpr Duration operator""_s(unsigned long long l) {
-  return Duration::seconds(static_cast<uint64_t>(l));
+
+// Convert char digits to integer at compile time
+template <char... Cs> struct digits_to_value;
+
+template <> struct digits_to_value<> {
+  static constexpr unsigned long long value = 0;
+};
+
+template <char C, char... Cs> struct digits_to_value<C, Cs...> {
+  static_assert(C >= '0' && C <= '9', "Invalid digit");
+  static constexpr unsigned long long value =
+      (C - '0') * pow10(sizeof...(Cs)) + digits_to_value<Cs...>::value;
+};
+
+template <char... Cs> constexpr auto operator""_us() {
+  constexpr unsigned long long v = digits_to_value<Cs...>::value;
+  using T = typename smallest_uint<v>::type;
+  return SimpleDuration<T>::micros(v);
+}
+template <char... Cs> constexpr auto operator""_ms() {
+  constexpr unsigned long long v = digits_to_value<Cs...>::value * 1000;
+  using T = typename smallest_uint<v>::type;
+  return SimpleDuration<T>::micros(v);
+}
+template <char... Cs> constexpr auto operator""_s() {
+  constexpr unsigned long long v = digits_to_value<Cs...>::value * 1000'000;
+  using T = typename smallest_uint<v>::type;
+  return SimpleDuration<T>::micros(v);
 }
 
 class Hertz {

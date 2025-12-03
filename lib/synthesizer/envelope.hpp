@@ -52,7 +52,10 @@ public:
   }
   float operator-(const EnvelopeLevel &b) const { return _value - b._value; }
 
-  constexpr Duration operator*(const Duration &b) const { return b * _value; }
+  template <typename T>
+  constexpr SimpleDuration<T> operator*(const SimpleDuration<T> &b) const {
+    return b * _value;
+  }
   constexpr EnvelopeLevel operator*(const EnvelopeLevel &b) const {
     return EnvelopeLevel(b._value * _value);
   }
