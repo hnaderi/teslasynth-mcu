@@ -171,6 +171,27 @@ void test_should_ignore_instrument_change_when_config_has_instrument(void) {
   }
 }
 
+void test_config_instrument_overrides_runtime_instrument(void) {
+  Teslasynth<1, FakeNotes> tsynth;
+  TEST_ASSERT_EQUAL(0, tsynth.instrument_number(0));
+
+  tsynth.configuration().synth().instrument = 2;
+  TEST_ASSERT_EQUAL(2, tsynth.instrument_number(0));
+
+  tsynth.configuration().channel(0).instrument = 3;
+  TEST_ASSERT_EQUAL(3, tsynth.instrument_number(0));
+
+  tsynth.configuration().synth().instrument = 4;
+  TEST_ASSERT_EQUAL(3, tsynth.instrument_number(0));
+}
+
+void test_non_existing_instrument_number_falls_back_to_default(void) {
+  Teslasynth<1, FakeNotes> tsynth;
+  TEST_ASSERT_EQUAL(0, tsynth.instrument_number(0));
+  tsynth.configuration().synth().instrument = 200;
+  assert_instrument_equal(tsynth.instrument(0), default_instrument());
+}
+
 void test_should_turnoff_when_needed(void) {
   const std::vector<ControlChange> cc_event_types{
       ControlChange::ALL_SOUND_OFF,
@@ -244,6 +265,8 @@ extern "C" void app_main(void) {
   RUN_TEST(test_should_ignore_note_off_when_not_playing);
   RUN_TEST(test_should_handle_instrument_change);
   RUN_TEST(test_should_ignore_instrument_change_when_config_has_instrument);
+  RUN_TEST(test_config_instrument_overrides_runtime_instrument);
+  RUN_TEST(test_non_existing_instrument_number_falls_back_to_default);
   RUN_TEST(test_should_turnoff_when_needed);
   RUN_TEST(test_should_start_playing_the_first_note_on_message);
   RUN_TEST(test_should_ignore_off_messages_when_not_playing);

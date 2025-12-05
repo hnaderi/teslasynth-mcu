@@ -320,11 +320,13 @@ public:
 
   inline constexpr uint8_t instrument_number(uint8_t ch) const {
     assert(ch < OUTPUTS);
-    return config_.synth_config.instrument.value_or(current_instrument_[ch]);
+    return config_.channel_configs[ch].instrument.value_or(
+        config_.synth_config.instrument.value_or(current_instrument_[ch]));
   }
 
   inline const Instrument &instrument(uint8_t ch) const {
-    return _instruments[instrument_number(ch)];
+    const auto nr = instrument_number(ch);
+    return nr < _instruments_size ? _instruments[nr] : default_instrument();
   }
 
   inline void note_off(uint8_t ch, uint8_t number, Duration time) {
