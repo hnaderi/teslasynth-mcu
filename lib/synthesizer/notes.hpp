@@ -50,7 +50,7 @@ struct MidiNote {
   }
 };
 
-class Note {
+class Note final {
   Hertz _freq = Hertz(0);
   Envelope _envelope =
       Envelope(ADSR{0_us, 0_us, EnvelopeLevel(0), 0_us, CurveType::Lin});
@@ -81,7 +81,7 @@ public:
   const EnvelopeLevel &max_volume() const { return _volume; }
 };
 
-template <std::uint8_t MAX_NOTES = CONFIG_MAX_NOTES> class Voice {
+template <std::uint8_t MAX_NOTES = CONFIG_MAX_NOTES> class Voice final {
   uint8_t _size = MAX_NOTES;
   std::array<Note, MAX_NOTES> _notes;
   std::array<uint8_t, MAX_NOTES> _numbers;

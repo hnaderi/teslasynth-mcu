@@ -1,5 +1,6 @@
 #pragma once
 
+#include "application.hpp"
 #include "freertos/idf_additions.h"
 
 namespace teslasynth::app {
@@ -21,15 +22,15 @@ StreamBufferHandle_t init();
 } // namespace devices
 
 namespace synth {
-void init(StreamBufferHandle_t sbuf);
+void init(StreamBufferHandle_t sbuf, PlaybackHandle handle);
 }
 
 namespace gui {
-void init(void);
+void init();
 }
 
 namespace cli {
-void init(void);
+void init(UIHandle handle);
 }
 
 } // namespace teslasynth::app

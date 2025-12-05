@@ -1,8 +1,10 @@
+#include "application.hpp"
 #include "configuration/synth.hpp"
 #include "core.hpp"
 #include "esp_console.h"
 #include "freertos/task.h"
 #include "instruments.hpp"
+#include "midi_synth.hpp"
 #include "notes.hpp"
 #include <cstdint>
 #include <cstdlib>
@@ -17,7 +19,9 @@ using namespace app::configuration;
 namespace keys {
 static constexpr const char *max_on_time = "max-on-time";
 static constexpr const char *min_deadtime = "min-deadtime";
-// static constexpr const char *tuning = "tuning";
+static constexpr const char *max_duty = "max-duty";
+static constexpr const char *duty_window = "duty-window";
+static constexpr const char *tuning = "tuning";
 static constexpr const char *notes = "notes";
 static constexpr const char *instrument = "instrument";
 }; // namespace keys
@@ -108,23 +112,41 @@ inline int invalid_instrument(const char *value) {
   return 1;
 }
 
-void register_configuration_commands(void);
+void register_configuration_commands(UIHandle *handle);
+static UIHandle handle_;
 
 #define cstr(value) std::string(value).c_str()
 #define instrument_value(config)                                               \
   (config.instrument.has_value() ? std::to_string(*config.instrument).c_str()  \
                                  : "")
 
-static int print_config() {
-  const Config &config = get_config();
-  printf("Configuration:\n"
+static void print_channel_config(uint8_t nr, const Config &config) {
+  printf("Channel[%u] configuration:\n"
          "\t%s = %u\n"
          "\t%s = %s\n"
          "\t%s = %s\n"
+         "\t%s = %s\n"
+         "\t%s = %s\n"
          "\t%s = <%s>\n",
-         keys::notes, config.notes, keys::max_on_time, cstr(config.max_on_time),
-         keys::min_deadtime, cstr(config.min_deadtime), keys::instrument,
+         nr + 1, keys::notes, config.notes, keys::max_on_time,
+         cstr(config.max_on_time), keys::min_deadtime,
+         cstr(config.min_deadtime), keys::max_duty, cstr(config.max_duty),
+         keys::duty_window, cstr(config.duty_window), keys::instrument,
          instrument_value(config));
+}
+
+static int print_config() {
+  auto config = handle_.config_read();
+  printf("Synth configuration:\n"
+         "\t%s = %s\n"
+         "\t%s = <%s>\n",
+         keys::tuning, cstr(config.synth().a440), keys::instrument,
+         instrument_value(config.synth()));
+
+  for (auto i = 0; i < config.channels_size(); i++) {
+    print_channel_config(i, config.channel(i));
+  }
+
   return 0;
 }
 
@@ -134,7 +156,7 @@ static int print_config() {
   }
 
 static int set_config(int argc, char **argv) {
-  Config config = get_config();
+  Config config;
   for (int i = 0; i < argc; i++) {
     char *eq = strchr(argv[i], '=');
     if (!eq) {
@@ -164,8 +186,8 @@ static int set_config(int argc, char **argv) {
     }
   }
 
-  update_config(config);
-  save_config();
+  // update_config(config);
+  // save_config();
   return 0;
 }
 
@@ -178,7 +200,7 @@ static int config_cmd(int argc, char **argv) {
     return 0;
   }
   if (argc == 2 && strcmp(argv[1], "reset") == 0) {
-    reset_config();
+    handle_.config_set(AppConfig{});
     print_config();
     return 0;
   }
@@ -186,7 +208,9 @@ static int config_cmd(int argc, char **argv) {
   return 0;
 }
 
-void register_configuration_commands(void) {
+void register_configuration_commands(UIHandle handle) {
+  // TODO refactor
+  handle_ = handle;
   const esp_console_cmd_t cfg_cmd = {
       .command = "config",
       .help = "Configuration commands",

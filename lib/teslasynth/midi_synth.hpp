@@ -122,7 +122,7 @@ template <std::uint8_t OUTPUTS = 1, std::size_t SIZE = 64> struct PulseBuffer {
  * Max value: 100%
  * Resolution: 0.5%
  */
-class DutyCycle {
+class DutyCycle final {
   constexpr static auto max_duty = 100, max_value = 200;
   uint8_t value_;
 
@@ -199,9 +199,10 @@ template <std::uint8_t OUTPUTS = 1> struct Configuration {
 
   SynthConfig &synth() { return synth_config; }
   Config &channel(uint8_t ch) { return channel_configs[ch]; }
+  constexpr uint8_t channels_size() const { return OUTPUTS; }
 };
 
-class DutyLimiter {
+class DutyLimiter final {
   uint16_t max_budget_ = 0, budget_ = 0, replenishing_ = 0;
   DutyCycle duty_;
 
@@ -235,7 +236,7 @@ public:
   constexpr Duration16 budget() const { return Duration16::micros(budget_); }
 };
 
-template <std::uint8_t OUTPUTS = 1, class N = Voice<>> class Teslasynth {
+template <std::uint8_t OUTPUTS = 1, class N = Voice<>> class Teslasynth final {
   Configuration<OUTPUTS> config_;
   TrackState<OUTPUTS> _track;
   Instrument const *_instruments = instruments.begin();
@@ -255,7 +256,7 @@ public:
   Teslasynth(TrackStateCallback onPlaybackChanged = [](bool) {})
       : Teslasynth(Configuration<OUTPUTS>(), onPlaybackChanged) {}
 
-  Configuration<> &configuration() { return config_; }
+  inline constexpr auto &configuration() { return config_; }
 
   template <std::size_t INSTRUMENTS>
   void use_instruments(const std::array<Instrument, INSTRUMENTS> &instruments) {

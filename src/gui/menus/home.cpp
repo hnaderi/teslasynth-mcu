@@ -1,5 +1,6 @@
 #include "configuration/synth.hpp"
 #include "lvgl.h"
+#include "midi_synth.hpp"
 #include "notes.hpp"
 
 namespace teslasynth::app::gui {
@@ -8,7 +9,8 @@ static lv_obj_t *label, *label2;
 static void render_home_section(void *) {
   if (label == nullptr || label2 == nullptr)
     return;
-  const auto &config = teslasynth::app::configuration::get_config();
+  // TODO new menus
+  const Config config; //= teslasynth::app::configuration::get_config();
 
   lv_label_set_text_fmt(label, "Max on: %s",
                         std::string(config.max_on_time).c_str());

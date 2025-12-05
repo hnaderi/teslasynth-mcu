@@ -1,6 +1,7 @@
 #include "configuration/synth.hpp"
 
 #include "lvgl.h"
+#include "midi_synth.hpp"
 #include "notes.hpp"
 
 namespace teslasynth::app::gui {
@@ -52,7 +53,8 @@ lv_obj_t *create_configuration_section(lv_obj_t *menu) {
   lv_menu_separator_create(sub_configuration_page);
   auto section = lv_menu_section_create(sub_configuration_page);
 
-  const auto &config = app::configuration::get_config();
+  // TODO new menu
+  const Config config; //= app::configuration::get_config();
   static ConfigSliderContext max_on_time =
                                  {
                                      .value = config.max_on_time.micros(),
@@ -94,4 +96,4 @@ lv_obj_t *create_configuration_section(lv_obj_t *menu) {
   return sub_configuration_page;
 }
 
-}
+} // namespace teslasynth::app::gui

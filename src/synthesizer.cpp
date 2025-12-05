@@ -1,48 +1,26 @@
-#include "configuration/synth.hpp"
-#include "core.hpp"
-#include "esp_err.h"
-#include "esp_event.h"
+#include "application.hpp"
 #include "esp_log.h"
 #include "esp_timer.h"
 #include "freertos/idf_additions.h"
-#include "instruments.hpp"
 #include "midi_core.hpp"
 #include "midi_parser.hpp"
 #include "midi_synth.hpp"
-#include "notes.hpp"
 #include "output/rmt_driver.hpp"
 #include "portmacro.h"
-#include "synthesizer_events.hpp"
-#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
-#include <limits>
 #include <stddef.h>
-#include <string>
-
-ESP_EVENT_DEFINE_BASE(EVENT_SYNTHESIZER_BASE);
 
 namespace teslasynth::app::synth {
 using namespace teslasynth::midisynth;
-using namespace teslasynth::app::configuration;
-
-void on_track_play(bool playing) {
-  if (playing) {
-    ESP_ERROR_CHECK_WITHOUT_ABORT(esp_event_post(
-        EVENT_SYNTHESIZER_BASE, SYNTHESIZER_PLAYING, NULL, 0, 0));
-  } else {
-    ESP_ERROR_CHECK_WITHOUT_ABORT(esp_event_post(
-        EVENT_SYNTHESIZER_BASE, SYNTHESIZER_STOPPED, NULL, 0, 0));
-  }
-}
-
-Teslasynth<CONFIG_TESLASYNTH_OUTPUT_COUNT> tsynth(on_track_play);
-SemaphoreHandle_t xNotesMutex;
 
 static const char *TAG = "SYNTH";
 
-static void synth(void *pvParams) {
+static PlaybackHandle playback;
+static StreamBufferHandle_t stream;
+
+static void input(void *) {
   MidiChannelMessage msg;
   MidiParser parser([&](const MidiChannelMessage msg) {
     auto now = Duration64::micros(esp_timer_get_time());
@@ -50,23 +28,22 @@ static void synth(void *pvParams) {
     ESP_LOGI(TAG, "Received: %s at %s", std::string(msg).c_str(),
              std::string(now).c_str());
 #endif
-    tsynth.handle(msg, now);
+    playback.handle(msg, now);
   });
-  StreamBufferHandle_t sbuf = static_cast<StreamBufferHandle_t>(pvParams);
   uint8_t buffer[256];
   while (true) {
     size_t read =
-        xStreamBufferReceive(sbuf, buffer, sizeof(buffer), portMAX_DELAY);
+        xStreamBufferReceive(stream, buffer, sizeof(buffer), portMAX_DELAY);
 
     if (read) {
-      xSemaphoreTake(xNotesMutex, portMAX_DELAY);
+      playback.acquire();
       parser.feed(buffer, read);
-      xSemaphoreGive(xNotesMutex);
+      playback.release();
     }
   }
 }
 
-static void render(void *) {
+static void output(void *pvParams) {
   constexpr TickType_t loopTime = pdMS_TO_TICKS(10);
   TickType_t lastTime = xTaskGetTickCount();
 
@@ -76,13 +53,13 @@ static void render(void *) {
   while (true) {
     vTaskDelayUntil(&lastTime, loopTime);
 
-    xSemaphoreTake(xNotesMutex, portMAX_DELAY);
+    playback.acquire();
     auto now = esp_timer_get_time();
     auto left = now - processed;
     auto budget = Duration16::micros(static_cast<uint16_t>(
         std::min<int64_t>(left, std::numeric_limits<uint16_t>::max())));
-    tsynth.sample_all(budget, buffer);
-    xSemaphoreGive(xNotesMutex);
+    playback.sample_all(budget, buffer);
+    playback.release();
 
     for (uint8_t ch = 0; ch < CONFIG_TESLASYNTH_OUTPUT_COUNT; ch++) {
       devices::rmt::pulse_write(&buffer.data(ch), buffer.data_size(ch), ch);
@@ -111,11 +88,12 @@ static void render(void *) {
   }
 }
 
-void init(StreamBufferHandle_t sbuf) {
+void init(StreamBufferHandle_t sbuf, PlaybackHandle handle) {
   ESP_LOGD(TAG, "init");
-  xNotesMutex = xSemaphoreCreateMutex();
-  xTaskCreatePinnedToCore(synth, "Synth", 8 * 1024, sbuf, 10, NULL, 1);
-  xTaskCreatePinnedToCore(render, "Render", 8 * 1024, NULL, 10, NULL, 1);
+  playback = handle;
+  stream = sbuf;
+  xTaskCreatePinnedToCore(input, "Input", 8 * 1024, nullptr, 10, nullptr, 1);
+  xTaskCreatePinnedToCore(output, "Output", 8 * 1024, nullptr, 10, nullptr, 1);
 }
 
 } // namespace teslasynth::app::synth

@@ -37,7 +37,8 @@ lv_obj_t *label1, *label2;
 void render_config(void *) {
   if (label1 == nullptr || label2 == nullptr)
     return;
-  const auto &config = app::configuration::get_config();
+  // TODO new
+  const Config config; //= app::configuration::get_config();
 
   lv_label_set_text_fmt(label1, "Max on: %s",
                         std::string(config.max_on_time).c_str());
